@@ -1,12 +1,17 @@
 //Dipesh Manandhar 4/27/2019
 
+#ifndef MAIN_CPP
+#define MAIN_CPP
+
 //External Libraries for OpenGL (GLFW and GLAD)
 #include <glad/glad.h> // NOTE: always include GLAD before GLFW
 #include <GLFW/glfw3.h>
 
+#ifndef STB_IMAGE_IMPLEMENTATION
 //External Library For loading images (STB)
 #define STB_IMAGE_IMPLEMENTATION
 #include "../Headers/stb_image.h"
+#endif // !STB_IMAGE_IMPLEMENTATION
 
 //External Library for Matrix Math (GLM)
 #include <glm/glm.hpp>
@@ -15,17 +20,18 @@
 
 //C++ Libraries
 #include <iostream>
-//#include <string> // use of to_str() requires C++11
+#include <string> // use of to_str() requires C++11
 
 //Created H Files
 #include "../Headers/Shader.h"
 #include "../Headers/Camera.h"
 #include "../Headers/Mesh.h"
 #include "../Headers/Model.h"
+#include "../Headers/TextRenderer.h"
+#include "../Headers/Loader.h"
+#include "../Headers/Screen.h"
 
-//Settings
-const unsigned int SCREEN_WIDTH = 800;
-const unsigned int SCREEN_HEIGHT = 600;
+using namespace std;
 
 //Camera
 Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
@@ -36,6 +42,9 @@ bool firstMouse = true;
 //For frame rate adjustments
 float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
+float accumulator = 0.0f;	// Time Counter
+unsigned int frames = 0;
+float fps = 0.0f;
 
 // method called every time screen is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -49,9 +58,11 @@ void processInput(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 		glfwSetWindowShouldClose(window, true);
 	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	//if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+	//	glPolygonMode(GL_FRONT_AND_BACK, GL_POINTS);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		camera.processKeyboard(FORWARD, deltaTime);
@@ -90,39 +101,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	camera.processMouseScroll(yoffset);
 }
 
-// method to load cubemaps (for skybox)
-unsigned int loadCubemap(vector<std::string> faces)
-{
-	unsigned int textureID;
-	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
-
-	int width, height, nrChannels;
-	for (unsigned int i = 0; i < faces.size(); i++)
-	{
-		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
-		if (data)
-		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-				0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
-			);
-			stbi_image_free(data);
-		}
-		else
-		{
-			std::cout << "Cubemap texture failed to load at path: " << faces[i] << std::endl;
-			stbi_image_free(data);
-		}
-	}
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-
-	return textureID;
-}
-
 int main()
 {
 	//Initialize GLFW
@@ -136,7 +114,7 @@ int main()
 	GLFWwindow* window = glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "LearnOpenGL", NULL, NULL);
 	if (window == NULL)
 	{
-		std::cout << "Failed to create GLFW window" << std::endl;
+		cout << "Failed to create GLFW window" << endl;
 		glfwTerminate();
 		return -1;
 	}
@@ -145,7 +123,7 @@ int main()
 	//Initialize GLAD
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
-		std::cout << "Failed to initialize GLAD" << std::endl;
+		cout << "Failed to initialize GLAD" << endl;
 		glfwTerminate();
 		return -1;
 	}
@@ -312,12 +290,12 @@ int main()
 	//Point Lights
 	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
-		lightingShader.setVec3("pointLights[" + std::to_string(i) + "].ambient", 0.2f, 0.2f, 0.2f);
-		lightingShader.setVec3("pointLights[" + std::to_string(i) + "].diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
-		lightingShader.setVec3("pointLights[" + std::to_string(i) + "].specular", 1.0f, 1.0f, 1.0f);
-		lightingShader.setFloat("pointLights[" + std::to_string(i) + "].constant", 1.0f);
-		lightingShader.setFloat("pointLights[" + std::to_string(i) + "].linear", 0.09f);
-		lightingShader.setFloat("pointLights[" + std::to_string(i) + "].quadratic", 0.032f);
+		lightingShader.setVec3("pointLights[" + to_string(i) + "].ambient", 0.2f, 0.2f, 0.2f);
+		lightingShader.setVec3("pointLights[" + to_string(i) + "].diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
+		lightingShader.setVec3("pointLights[" + to_string(i) + "].specular", 1.0f, 1.0f, 1.0f);
+		lightingShader.setFloat("pointLights[" + to_string(i) + "].constant", 1.0f);
+		lightingShader.setFloat("pointLights[" + to_string(i) + "].linear", 0.09f);
+		lightingShader.setFloat("pointLights[" + to_string(i) + "].quadratic", 0.032f);
 	}
 	//Spot Light
 	lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
@@ -330,7 +308,7 @@ int main()
 	lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
 
 	//load Skybox
-	vector<std::string> faces
+	vector<string> faces
 	{
 		"right.jpg",
 		"left.jpg",
@@ -343,10 +321,10 @@ int main()
 	for (int i=0 ; i<faces.size(); i++)
 		faces[i] = "Resources/CubeMaps/skybox/" + faces[i];
 
-	unsigned int cubemapTexture = loadCubemap(faces);
+	unsigned int cubemapTexture = Loader::loadCubemap(faces);
 
-
-
+	//initialize texture renderer
+	TextRenderer textRenderer("font1.png");
 
 	//enable z-buffer
 	glEnable(GL_DEPTH_TEST);
@@ -363,6 +341,14 @@ int main()
 		float currentFrame = glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
+		accumulator += deltaTime;
+		frames++;
+		if (accumulator >= 1)
+		{
+			fps = frames / accumulator;
+			accumulator = 0;
+			frames = 0;
+		}
 
 		// input
 		processInput(window);
@@ -422,7 +408,7 @@ int main()
 		//Point Lights
 		pointLightPositions[0] = glm::vec3(cos(glfwGetTime()), 2.0f, sin(glfwGetTime()));
 		for (int i = 0; i < NUM_POINT_LIGHTS; i++)
-			lightingShader.setVec3("pointLights[" + std::to_string(i) + "].position", glm::vec3(view * glm::vec4(pointLightPositions[i], 1.0f)));
+			lightingShader.setVec3("pointLights[" + to_string(i) + "].position", glm::vec3(view * glm::vec4(pointLightPositions[i], 1.0f)));
 		
 		//model matrix
 		glm::mat4 model = glm::mat4(1.0f);
@@ -481,6 +467,24 @@ int main()
 		glDepthFunc(GL_LESS); // set depth function back to default
 
 
+		//draw text
+		static GLint polygonMode;
+		glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		glDisable(GL_STENCIL_TEST);
+		glDisable(GL_DEPTH_TEST);
+		glDisable(GL_CULL_FACE);
+		textRenderer.Draw(("FPS: " + to_string(fps)).c_str());
+		glEnable(GL_STENCIL_TEST);
+		glEnable(GL_DEPTH_TEST);
+		glEnable(GL_CULL_FACE);
+		if(polygonMode == GL_LINE)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//else if(polygonMode == GL_FILL)
+		//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		//else if (polygonMode == GL_POINTS)
+		//	glPolygonMode(GL_FRONT_AND_BACK, GL_POINTS);
+
 		// check and call events and swap the buffers
 		glfwPollEvents();
 		glfwSwapBuffers(window);
@@ -491,9 +495,11 @@ int main()
 	glDeleteVertexArrays(1, &skyboxVAO);
 	glDeleteBuffers(1, &lampVBO);
 	glDeleteBuffers(1, &skyboxVBO);
-
+	glDeleteTextures(1, &cubemapTexture);
 	
 	glfwTerminate();
 
 	return 0;
 }
+
+#endif // !MAIN_CPP
