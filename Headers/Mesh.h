@@ -65,12 +65,12 @@ public:
 
 			//TODO: add ambient texture?
 
-			shader.setInt(("material." + name + number).c_str(), i);
+			shader.setInt((name + number).c_str(), i);
 			glBindTexture(GL_TEXTURE_2D, textures[i].id);
 		}
 
 		//shader.setInt("material.ambient", ); //TODO: read in shininess factor
-		shader.setFloat("material.shininess", 32); //TODO: read in shininess factor
+		//shader.setFloat("material.shininess", 32); //TODO: read in shininess factor // 05.17.2019 - moved to a const value in LightingPassShader.frag
 
 
 		// draw mesh

@@ -156,11 +156,13 @@ int main()
 	//initialization
 	
 	//Create Shader Programs
-	Shader lightingShader("Resources/Shaders/LightingShader.vert", "Resources/Shaders/LightingShader.frag");
-	Shader borderShader("Resources/Shaders/BorderShader.vert", "Resources/Shaders/BorderShader.frag");
+	//Shader lightingShader("Resources/Shaders/LightingShader.vert", "Resources/Shaders/LightingShader.frag");
+	Shader geometryShader("Resources/Shaders/GeometryShader.vert", "Resources/Shaders/GeometryShader.frag");
+	//Shader borderShader("Resources/Shaders/BorderShader.vert", "Resources/Shaders/BorderShader.frag");
 	Shader lampShader("Resources/Shaders/LampShader.vert", "Resources/Shaders/LampShader.frag");
 	Shader skyboxShader("Resources/Shaders/SkyboxShader.vert", "Resources/Shaders/SkyboxShader.frag");
-	Shader screenShader("Resources/Shaders/FinalPassShader.vert", "Resources/Shaders/FinalPassShader.frag");
+	//Shader screenShader("Resources/Shaders/FinalPassShader.vert", "Resources/Shaders/FinalPassShader.frag");
+	Shader lightingPassShader("Resources/Shaders/LightingPassShader.vert", "Resources/Shaders/LightingPassShader.frag");
 
 	//Model nanosuit("Resources/Models/nanosuit/nanosuit.obj");
 	//Model nanosuit("Resources/Models/yagyuu/scene.gltf");
@@ -211,13 +213,14 @@ int main()
 		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f  // bottom-left        
 	};
 
-	const int NUM_POINT_LIGHTS=1;
 	glm::vec3 pointLightPositions[] = {
 	glm::vec3(1.0f,  2.0f,  0.0f)
-	//glm::vec3(2.3f, -3.3f, -4.0f),
+	//glm::vec3(-1.0f, 3.0f, 2.0f)
 	//glm::vec3(-4.0f,  2.0f, -12.0f),
 	//glm::vec3(0.0f,  0.0f, -3.0f)
 	};
+	const unsigned int NUM_POINT_LIGHTS = sizeof(pointLightPositions) / sizeof(pointLightPositions[0]);
+	//cout << NUM_POINT_LIGHTS << endl;
 
 	float skyboxVertices[] = {
 		// positions          
@@ -321,32 +324,36 @@ int main()
 	glBindVertexArray(0);
 
 	// don't forget to 'use' the corresponding shader program first (to set the uniforms)
-	lightingShader.use();
+	lightingPassShader.use();
 
 	//set light attributes
 	// Directional Light
-	lightingShader.setVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
-	lightingShader.setVec3("dirLight.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
-	lightingShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
+	//lightingPassShader.setVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
+	//lightingPassShader.setVec3("dirLight.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
+	//lightingPassShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
+	lightingPassShader.setVec3("dirLight.Color", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
+
 	//Point Lights
 	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
-		lightingShader.setVec3("pointLights[" + to_string(i) + "].ambient", 0.2f, 0.2f, 0.2f);
-		lightingShader.setVec3("pointLights[" + to_string(i) + "].diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
-		lightingShader.setVec3("pointLights[" + to_string(i) + "].specular", 1.0f, 1.0f, 1.0f);
-		lightingShader.setFloat("pointLights[" + to_string(i) + "].constant", 1.0f);
-		lightingShader.setFloat("pointLights[" + to_string(i) + "].linear", 0.09f);
-		lightingShader.setFloat("pointLights[" + to_string(i) + "].quadratic", 0.032f);
+		//lightingPassShader.setVec3("pointLights[" + to_string(i) + "].ambient", 0.2f, 0.2f, 0.2f);
+		lightingPassShader.setVec3("pointLights[" + to_string(i) + "].Color", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
+		//lightingPassShader.setVec3("pointLights[" + to_string(i) + "].specular", 1.0f, 1.0f, 1.0f);
+		//lightingPassShader.setFloat("pointLights[" + to_string(i) + "].constant", 1.0f);
+		lightingPassShader.setFloat("pointLights[" + to_string(i) + "].Linear", 0.007f);
+		lightingPassShader.setFloat("pointLights[" + to_string(i) + "].Quadratic", 0.0002f);
 	}
+	/*
 	//Spot Light
-	lightingShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-	lightingShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-	lightingShader.setFloat("spotLight.constant", 1.0f);
-	lightingShader.setFloat("spotLight.linear", 0.09f);
-	lightingShader.setFloat("spotLight.quadratic", 0.032f);
-	lightingShader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
-	lightingShader.setVec3("spotLight.diffuse", 0.8f, 0.8f, 0.8f); // darken the light a bit to fit the scene
-	lightingShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+	lightingPassShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+	lightingPassShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+	lightingPassShader.setFloat("spotLight.constant", 1.0f);
+	lightingPassShader.setFloat("spotLight.linear", 0.09f);
+	lightingPassShader.setFloat("spotLight.quadratic", 0.032f);
+	lightingPassShader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
+	lightingPassShader.setVec3("spotLight.diffuse", 0.8f, 0.8f, 0.8f); // darken the light a bit to fit the scene
+	lightingPassShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+	*/
 
 	//load Skybox
 	vector<string> faces
@@ -368,20 +375,38 @@ int main()
 	TextRenderer textRenderer("font1.png");
 
 	//Framebuffer setup
-	unsigned int framebuffer;
-	glGenFramebuffers(1, &framebuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+	unsigned int gBuffer;
+	glGenFramebuffers(1, &gBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+	unsigned int gPosition, gNormal, gColorSpec;
 
-	// generate texture for color buffer
-	unsigned int textureColorBuffer;
-	glGenTextures(1, &textureColorBuffer);
-	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glBindTexture(GL_TEXTURE_2D, 0);
-	// attach it to currently bound framebuffer object
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0);
+	// - position color buffer (16 or 32 bit float per component accuracy)
+	glGenTextures(1, &gPosition);
+	glBindTexture(GL_TEXTURE_2D, gPosition);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
+
+	// - normal color buffer (16 or 32 bit float per component accuracy)
+	glGenTextures(1, &gNormal);
+	glBindTexture(GL_TEXTURE_2D, gNormal);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
+
+	// - color + specular color buffer (8 bit byte per component accuracy)
+	glGenTextures(1, &gColorSpec);
+	glBindTexture(GL_TEXTURE_2D, gColorSpec);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColorSpec, 0);
+
+	// - tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+	unsigned int attachments[3] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2 };
+	glDrawBuffers(3, attachments);
 
 	// generate render buffer for depth and stencil tests
 	unsigned int rbo;
@@ -397,7 +422,11 @@ int main()
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	
+	lightingPassShader.use();
+	lightingPassShader.setInt("gPosition", 0);
+	lightingPassShader.setInt("gNormal", 1);
+	lightingPassShader.setInt("gColorSpec", 2);
+
 	//enable stencil buffer
 	//glEnable(GL_STENCIL_TEST);
 	//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
@@ -425,7 +454,7 @@ int main()
 		processInput(window);
 
 		//First Pass --------------------------------------------------------------------------------------------
-		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 
 		// rendering commands here
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -443,6 +472,92 @@ int main()
 		// pass projection matrix to shader (note that in this case it could change every frame)
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
+		//update stencil buffer for draw call
+		//glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		//glStencilMask(0xFF);
+
+
+		//draw scene
+		geometryShader.use();
+
+		//model matrix
+		glm::mat4 model = glm::mat4(1.0f);
+		//model = glm::scale(model, glm::vec3(0.1f));
+		//model = glm::translate(model, cubePositions[i]);
+		//model = glm::rotate(model, i * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+		model = glm::rotate(model,glm::radians(-90.0f),glm::vec3(1.0f,0.0f,0.0f));
+
+		//set transformatix matrices uniforms
+		glm::mat4 mv = view * model;
+		glm::mat4 mvp = projection * mv;
+		geometryShader.setMat4("mvp", mvp);
+		geometryShader.setMat4("mv", mv);
+		geometryShader.setMat3("mvNormal", transpose(inverse(glm::mat3(mv))));
+
+		//draw model
+		nanosuit.Draw(geometryShader);
+
+		//scale model and use stencil to draw only outline, using BorderShader.frag
+		/*
+		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
+		glStencilMask(0x00);
+		//glDisable(GL_DEPTH_TEST);
+
+		borderShader.use();
+
+
+		//set transformatix matrices uniforms
+		borderShader.setMat4("mvp", mvp);
+		//borderShader.setMat4("mv", mv);
+		//borderShader.setMat3("mvNormal", transpose(inverse(glm::mat3(mv))));
+		
+		//Draw scaled border
+		nanosuit.Draw(borderShader);
+
+		glStencilMask(0xFF);
+		glEnable(GL_DEPTH_TEST);
+		*/
+
+		// Second pass ----------------------------------------------------------------------------------------------
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		lightingPassShader.use();
+		
+		//set light position uniforms (they change based on the camera's view matrix)
+		//Directional Light
+		lightingPassShader.setVec3("dirLight.Direction", glm::vec3(view* glm::vec4(1.0f, -1.0f, -1.0f, 0.0f)));
+		//Point Lights
+		pointLightPositions[0] = glm::vec3(cos(glfwGetTime()), 2.0f, sin(glfwGetTime()));
+		for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+			lightingPassShader.setVec3("pointLights[" + to_string(i) + "].Position", glm::vec3(view * glm::vec4(pointLightPositions[i], 1.0f)));
+
+		//send gBuffer textures
+
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, gPosition);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, gNormal);
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, gColorSpec);
+		
+		//render quad
+		glBindVertexArray(screenVAO);
+		glDisable(GL_DEPTH_TEST);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		//unbind VAO
+		glBindVertexArray(0);
+
+
+		//now do forward rendering --------------------------------------------------------------------------------
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+		glBlitFramebuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		glEnable(GL_DEPTH_TEST);
 		//glStencilMask(0x00); //Don't update stencil buffer for certain draws
 		//draw lamp
 		lampShader.use();
@@ -467,62 +582,6 @@ int main()
 		}
 		//unbind VAO
 		glBindVertexArray(0);
-
-
-		//update stencil buffer for draw call
-		//glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		//glStencilMask(0xFF);
-
-
-		//draw scene
-		lightingShader.use();
-
-		
-		//set light position uniforms (they change based on the camera's view matrix)
-		//Directional Light
-		lightingShader.setVec3("dirLight.direction", glm::vec3(view * glm::vec4(0.0f, -1.0f, 0.0f, 0.0f)));
-		//Point Lights
-		pointLightPositions[0] = glm::vec3(cos(glfwGetTime()), 2.0f, sin(glfwGetTime()));
-		for (int i = 0; i < NUM_POINT_LIGHTS; i++)
-			lightingShader.setVec3("pointLights[" + to_string(i) + "].position", glm::vec3(view * glm::vec4(pointLightPositions[i], 1.0f)));
-		
-		//model matrix
-		glm::mat4 model = glm::mat4(1.0f);
-		//model = glm::scale(model, glm::vec3(0.1f));
-		//model = glm::translate(model, cubePositions[i]);
-		//model = glm::rotate(model, i * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-		model = glm::rotate(model,glm::radians(-90.0f),glm::vec3(1.0f,0.0f,0.0f));
-
-		//set transformatix matrices uniforms
-		glm::mat4 mv = view * model;
-		glm::mat4 mvp = projection * mv;
-		lightingShader.setMat4("mvp", mvp);
-		lightingShader.setMat4("mv", mv);
-		lightingShader.setMat3("mvNormal", transpose(inverse(glm::mat3(mv))));
-
-		//draw model
-		nanosuit.Draw(lightingShader);
-
-		//scale model and use stencil to draw only outline, using BorderShader.frag
-		/*
-		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
-		glStencilMask(0x00);
-		//glDisable(GL_DEPTH_TEST);
-
-		borderShader.use();
-
-
-		//set transformatix matrices uniforms
-		borderShader.setMat4("mvp", mvp);
-		//borderShader.setMat4("mv", mv);
-		//borderShader.setMat3("mvNormal", transpose(inverse(glm::mat3(mv))));
-		
-		//Draw scaled border
-		nanosuit.Draw(borderShader);
-
-		glStencilMask(0xFF);
-		glEnable(GL_DEPTH_TEST);
-		*/
 
 		//skybox
 		//glDisable(GL_STENCIL_TEST); // dont use stencil for skybox
@@ -562,19 +621,7 @@ int main()
 		//else if (polygonMode == GL_POINTS)
 		//	glPolygonMode(GL_FRONT_AND_BACK, GL_POINTS);
 
-		// Second pass ----------------------------------------------------------------------------------------------
-		glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
-		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
 
-		screenShader.use();
-		glBindVertexArray(screenVAO);
-		glDisable(GL_DEPTH_TEST);
-		glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
-		glDrawArrays(GL_TRIANGLES, 0, 6);
-
-		//unbind VAO
-		glBindVertexArray(0);
 
 
 		// check and call events and swap the buffers
@@ -590,7 +637,10 @@ int main()
 	glDeleteBuffers(1, &skyboxVBO);
 	glDeleteBuffers(1, &screenVBO);
 	glDeleteTextures(1, &cubemapTexture);
-	glDeleteFramebuffers(1, &framebuffer);
+	glDeleteFramebuffers(1, &gBuffer);
+	glDeleteTextures(1, &gPosition);
+	glDeleteTextures(1, &gNormal);
+	glDeleteTextures(1, &gColorSpec);
 	
 	glfwTerminate();
 
