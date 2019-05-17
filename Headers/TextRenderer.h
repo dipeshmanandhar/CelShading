@@ -46,7 +46,7 @@ public:
 	// width and height are the respective dimension sizes to use per character
 	void Draw(const char* text, float xpos = -1.0f, float ypos = 1.0f, float width = 50.0f/SCREEN_WIDTH, float height = 50.0f/SCREEN_HEIGHT) const
 	{
-		//const unsigned int numVertices = text.length() * 30; // 2 triangles per character, 3 points per triangle,  5 floats (3 for position, 2 for texel) per point
+		//const unsigned int numVertices = text.length() * 24; // 2 triangles per character, 3 points per triangle,  4 floats (2 for position, 2 for texel) per point
 		vector<float> vertices;
 		//cout << text << endl;
 
@@ -57,41 +57,35 @@ public:
 			//top-left vertex
 			vertices.push_back(xpos + width*i);	//position data
 			vertices.push_back(ypos);
-			vertices.push_back(0.0f);
 			vertices.push_back((text[i] % horizontalChars) * texelCellWidth);	//texel data
 			vertices.push_back(1 - (text[i] / horizontalChars) * texelCellHeight); //the 1 - () is because the y axis of texels is flipped from the rows going down
 			//bottom-left vertex
-			vertices.push_back(vertices[i * 30 + 0]);	//position data
-			vertices.push_back(vertices[i * 30 + 1] - height);
-			vertices.push_back(vertices[i * 30 + 2]);
-			vertices.push_back(vertices[i * 30 + 3]);	//texel data
-			vertices.push_back(vertices[i * 30 + 4] - texelCellHeight); //remember, the y axis of texels is flipped
+			vertices.push_back(vertices[i * 24 + 0]);	//position data
+			vertices.push_back(vertices[i * 24 + 1] - height);
+			vertices.push_back(vertices[i * 24 + 2]);	//texel data
+			vertices.push_back(vertices[i * 24 + 3] - texelCellHeight); //remember, the y axis of texels is flipped
 			//bottom-right vertex
-			vertices.push_back(vertices[i * 30 + 0] + width);	//position data
-			vertices.push_back(vertices[i * 30 + 6]);
-			vertices.push_back(vertices[i * 30 + 2]);
-			vertices.push_back(vertices[i * 30 + 3] + texelCellWidth);	//texel data
-			vertices.push_back(vertices[i * 30 + 9]);
+			vertices.push_back(vertices[i * 24 + 0] + width);	//position data
+			vertices.push_back(vertices[i * 24 + 5]);
+			vertices.push_back(vertices[i * 24 + 2] + texelCellWidth);	//texel data
+			vertices.push_back(vertices[i * 24 + 7]);
 			
 			//top-right triangle
 			//bottom-right vertex
-			vertices.push_back(vertices[i * 30 + 10]);	//position data
-			vertices.push_back(vertices[i * 30 + 11]);
-			vertices.push_back(vertices[i * 30 + 2]);
-			vertices.push_back(vertices[i * 30 + 13]);	//texel data
-			vertices.push_back(vertices[i * 30 + 14]);
+			vertices.push_back(vertices[i * 24 + 8]);	//position data
+			vertices.push_back(vertices[i * 24 + 9]);
+			vertices.push_back(vertices[i * 24 + 10]);	//texel data
+			vertices.push_back(vertices[i * 24 + 11]);
 			//top-right vertex
-			vertices.push_back(vertices[i * 30 + 10]);	//position data
-			vertices.push_back(vertices[i * 30 + 1]);
-			vertices.push_back(vertices[i * 30 + 2]);
-			vertices.push_back(vertices[i * 30 + 13]);	//texel data
-			vertices.push_back(vertices[i * 30 + 4]);
+			vertices.push_back(vertices[i * 24 + 8]);	//position data
+			vertices.push_back(vertices[i * 24 + 1]);
+			vertices.push_back(vertices[i * 24 + 10]);	//texel data
+			vertices.push_back(vertices[i * 24 + 3]);
 			//top-left vertex
-			vertices.push_back(vertices[i * 30 + 0]);	//position data
-			vertices.push_back(vertices[i * 30 + 1]);
-			vertices.push_back(vertices[i * 30 + 2]);
-			vertices.push_back(vertices[i * 30 + 3]);	//texel data
-			vertices.push_back(vertices[i * 30 + 4]);
+			vertices.push_back(vertices[i * 24 + 0]);	//position data
+			vertices.push_back(vertices[i * 24 + 1]);
+			vertices.push_back(vertices[i * 24 + 2]);	//texel data
+			vertices.push_back(vertices[i * 24 + 3]);
 		}
 
 		//for (int i=0;i<vertices.size();i+=5)
@@ -104,9 +98,9 @@ public:
 		// Copy vertex array data into VBO
 		glBufferData(GL_ARRAY_BUFFER, sizeof(vertices[0]) * vertices.size(), &(vertices[0]), GL_STATIC_DRAW);
 		// set the vertex attributes (only position and texel data)
-		glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+		glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 		glEnableVertexAttribArray(0);
-		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 		// set the texture uniform in the Shader
 		shader->use();
@@ -116,7 +110,7 @@ public:
 
 		// draw mesh
 		//glBindVertexArray(VAO); //already binded above
-		glDrawArrays(GL_TRIANGLES, 0, vertices.size()/5);
+		glDrawArrays(GL_TRIANGLES, 0, vertices.size()/4);
 		glBindVertexArray(0);
 
 		//delete[] vertices;

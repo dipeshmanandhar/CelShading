@@ -251,12 +251,25 @@ int main()
 		 1.0f, -1.0f,  1.0f
 	};
 
-	// Create VBO
-	unsigned int lampVBO,skyboxVBO;	// Vertex Buffer Object
-	glGenBuffers(1, &lampVBO);	// Objects in C are structs, thus in OpenGL, int ids "point to" object memory
-	glGenBuffers(1, &skyboxVBO);	// Objects in C are structs, thus in OpenGL, int ids "point to" object memory
+	float screenVertices[] = {
+		// positions   // texCoords
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		-1.0f, -1.0f,  0.0f, 0.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
 
-	unsigned int lampVAO, skyboxVAO;
+		-1.0f,  1.0f,  0.0f, 1.0f,
+		 1.0f, -1.0f,  1.0f, 0.0f,
+		 1.0f,  1.0f,  1.0f, 1.0f
+	};
+
+	// Create VBOs
+	unsigned int lampVBO,skyboxVBO,screenVBO;	// Vertex Buffer Object
+	glGenBuffers(1, &lampVBO);	// Objects in C are structs, thus in OpenGL, int ids "point to" object memory
+	glGenBuffers(1, &skyboxVBO);
+	glGenBuffers(1, &screenVBO);
+
+	// Create VAOs
+	unsigned int lampVAO, skyboxVAO,screenVAO;
 	//light VAO
 	glGenVertexArrays(1, &lampVAO);
 	glBindVertexArray(lampVAO);
@@ -275,11 +288,26 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, skyboxVBO);
 	// Copy vertex array data into VBO
 	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
-	// set the vertex attributes (only position data for our lamp)
+	// set the vertex attributes (only position data for skybox, as the position data is used for the texel as well)
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
-	// don't forget to 'use' the corresponding shader program first (to set the uniform)
+	//screen quad VAO
+	glGenVertexArrays(1, &screenVAO);
+	glBindVertexArray(screenVAO);
+	// we only need to bind to the VBO, the container's VBO's data already contains the correct data.
+	glBindBuffer(GL_ARRAY_BUFFER, screenVBO);
+	// Copy vertex array data into VBO
+	glBufferData(GL_ARRAY_BUFFER, sizeof(screenVertices), screenVertices, GL_STATIC_DRAW);
+	// set the vertex attributes (position and texel data for the screen quad)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
+
+	glBindVertexArray(0);
+
+	// don't forget to 'use' the corresponding shader program first (to set the uniforms)
 	lightingShader.use();
 
 	//set light attributes
@@ -323,15 +351,48 @@ int main()
 
 	unsigned int cubemapTexture = Loader::loadCubemap(faces);
 
-	//initialize texture renderer
+	//initialize text renderer
 	TextRenderer textRenderer("font1.png");
+
+	//Framebuffer setup
+	unsigned int framebuffer;
+	glGenFramebuffers(1, &framebuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
+	// generate texture for color buffer
+	unsigned int texColorBuffer;
+	glGenTextures(1, &texColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	// attach it to currently bound framebuffer object
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+
+	// generate render buffer for depth and stencil tests
+	unsigned int rbo;
+	glGenRenderbuffers(1, &rbo);
+	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT);
+	glBindRenderbuffer(GL_RENDERBUFFER, 0);
+	// attach it to currently bound framebuffer object
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
+
+	// perform framebuffer check
+	if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
 
 	//enable z-buffer
 	glEnable(GL_DEPTH_TEST);
+	
 	//enable stencil buffer
-	glEnable(GL_STENCIL_TEST);
-	glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
+	//glEnable(GL_STENCIL_TEST);
+	//glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE);
 
+	//enable backface culling (using default CCW winding order)
 	glEnable(GL_CULL_FACE);
 
 	// render loop
@@ -355,8 +416,8 @@ int main()
 
 		// rendering commands here
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-		
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//matrices for transformations
 
@@ -367,7 +428,7 @@ int main()
 		// pass projection matrix to shader (note that in this case it could change every frame)
 		glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
 
-		glStencilMask(0x00); //Don't update stencil buffer for certain draws
+		//glStencilMask(0x00); //Don't update stencil buffer for certain draws
 		//draw lamp
 		lampShader.use();
 
@@ -394,8 +455,8 @@ int main()
 
 
 		//update stencil buffer for draw call
-		glStencilFunc(GL_ALWAYS, 1, 0xFF);
-		glStencilMask(0xFF);
+		//glStencilFunc(GL_ALWAYS, 1, 0xFF);
+		//glStencilMask(0xFF);
 
 
 		//draw scene
@@ -428,6 +489,7 @@ int main()
 		nanosuit.Draw(lightingShader);
 
 		//scale model and use stencil to draw only outline, using BorderShader.frag
+		/*
 		glStencilFunc(GL_NOTEQUAL, 1, 0xFF);
 		glStencilMask(0x00);
 		//glDisable(GL_DEPTH_TEST);
@@ -445,11 +507,11 @@ int main()
 
 		glStencilMask(0xFF);
 		glEnable(GL_DEPTH_TEST);
-
+		*/
 
 		//skybox
-		glDisable(GL_STENCIL_TEST); // dont use stencil for skybox
-		glStencilMask(0x00);
+		//glDisable(GL_STENCIL_TEST); // dont use stencil for skybox
+		//glStencilMask(0x00);
 		// draw skybox as last
 		glDepthFunc(GL_LEQUAL);  // change depth function so depth test passes when values are equal to depth buffer's content
 		skyboxShader.use();
@@ -462,8 +524,8 @@ int main()
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(skyboxVAO);
-		glEnable(GL_STENCIL_TEST);
-		glStencilMask(0xFF);
+		//glEnable(GL_STENCIL_TEST);
+		//glStencilMask(0xFF);
 		glDepthFunc(GL_LESS); // set depth function back to default
 
 
@@ -471,11 +533,11 @@ int main()
 		static GLint polygonMode;
 		glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-		glDisable(GL_STENCIL_TEST);
+		//glDisable(GL_STENCIL_TEST);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		textRenderer.Draw(("FPS: " + to_string(fps)).c_str());
-		glEnable(GL_STENCIL_TEST);
+		//glEnable(GL_STENCIL_TEST);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
 		if(polygonMode == GL_LINE)
@@ -496,6 +558,7 @@ int main()
 	glDeleteBuffers(1, &lampVBO);
 	glDeleteBuffers(1, &skyboxVBO);
 	glDeleteTextures(1, &cubemapTexture);
+	glDeleteFramebuffers(1, &framebuffer);
 	
 	glfwTerminate();
 
