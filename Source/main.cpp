@@ -101,6 +101,18 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	camera.processMouseScroll(yoffset);
 }
 
+/*
+//TODO: implement rendering in such methods
+void drawScene()
+{
+	//draw model
+}
+void drawLights()
+{
+	
+}
+*/
+
 int main()
 {
 	//Initialize GLFW
@@ -148,6 +160,7 @@ int main()
 	Shader borderShader("Resources/Shaders/BorderShader.vert", "Resources/Shaders/BorderShader.frag");
 	Shader lampShader("Resources/Shaders/LampShader.vert", "Resources/Shaders/LampShader.frag");
 	Shader skyboxShader("Resources/Shaders/SkyboxShader.vert", "Resources/Shaders/SkyboxShader.frag");
+	Shader screenShader("Resources/Shaders/FinalPassShader.vert", "Resources/Shaders/FinalPassShader.frag");
 
 	//Model nanosuit("Resources/Models/nanosuit/nanosuit.obj");
 	//Model nanosuit("Resources/Models/yagyuu/scene.gltf");
@@ -300,9 +313,9 @@ int main()
 	// Copy vertex array data into VBO
 	glBufferData(GL_ARRAY_BUFFER, sizeof(screenVertices), screenVertices, GL_STATIC_DRAW);
 	// set the vertex attributes (position and texel data for the screen quad)
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
 	glBindVertexArray(0);
@@ -360,15 +373,15 @@ int main()
 	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
 
 	// generate texture for color buffer
-	unsigned int texColorBuffer;
-	glGenTextures(1, &texColorBuffer);
-	glBindTexture(GL_TEXTURE_2D, texColorBuffer);
+	unsigned int textureColorBuffer;
+	glGenTextures(1, &textureColorBuffer);
+	glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	// attach it to currently bound framebuffer object
-	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texColorBuffer, 0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, textureColorBuffer, 0);
 
 	// generate render buffer for depth and stencil tests
 	unsigned int rbo;
@@ -384,9 +397,6 @@ int main()
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-
-	//enable z-buffer
-	glEnable(GL_DEPTH_TEST);
 	
 	//enable stencil buffer
 	//glEnable(GL_STENCIL_TEST);
@@ -414,10 +424,15 @@ int main()
 		// input
 		processInput(window);
 
+		//First Pass --------------------------------------------------------------------------------------------
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
+
 		// rendering commands here
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//enable z-buffer
+		glEnable(GL_DEPTH_TEST);
 
 		//matrices for transformations
 
@@ -547,6 +562,21 @@ int main()
 		//else if (polygonMode == GL_POINTS)
 		//	glPolygonMode(GL_FRONT_AND_BACK, GL_POINTS);
 
+		// Second pass ----------------------------------------------------------------------------------------------
+		glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
+		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		screenShader.use();
+		glBindVertexArray(screenVAO);
+		glDisable(GL_DEPTH_TEST);
+		glBindTexture(GL_TEXTURE_2D, textureColorBuffer);
+		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		//unbind VAO
+		glBindVertexArray(0);
+
+
 		// check and call events and swap the buffers
 		glfwPollEvents();
 		glfwSwapBuffers(window);
@@ -555,8 +585,10 @@ int main()
 	//properly clean/delete all of GLFW's resources that were allocated
 	glDeleteVertexArrays(1, &lampVAO);
 	glDeleteVertexArrays(1, &skyboxVAO);
+	glDeleteVertexArrays(1, &screenVAO);
 	glDeleteBuffers(1, &lampVBO);
 	glDeleteBuffers(1, &skyboxVBO);
+	glDeleteBuffers(1, &screenVBO);
 	glDeleteTextures(1, &cubemapTexture);
 	glDeleteFramebuffers(1, &framebuffer);
 	
