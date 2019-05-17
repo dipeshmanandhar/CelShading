@@ -545,9 +545,9 @@ int main()
 
 
 		//draw text
-		static GLint polygonMode;
-		glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		//static GLint polygonMode;
+		//glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//glDisable(GL_STENCIL_TEST);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
@@ -555,8 +555,8 @@ int main()
 		//glEnable(GL_STENCIL_TEST);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
-		if(polygonMode == GL_LINE)
-			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//if(polygonMode == GL_LINE)
+		//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		//else if(polygonMode == GL_FILL)
 		//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//else if (polygonMode == GL_POINTS)
