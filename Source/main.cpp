@@ -46,6 +46,10 @@ float accumulator = 0.0f;	// Time Counter
 unsigned int frames = 0;
 float fps = 0.0f;
 
+//constants
+#define PI 3.14159265358979323846f
+
+
 // method called every time screen is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 {
@@ -162,7 +166,8 @@ int main()
 	Shader lampShader("Resources/Shaders/LampShader.vert", "Resources/Shaders/LampShader.frag");
 	Shader skyboxShader("Resources/Shaders/SkyboxShader.vert", "Resources/Shaders/SkyboxShader.frag");
 	//Shader screenShader("Resources/Shaders/FinalPassShader.vert", "Resources/Shaders/FinalPassShader.frag");
-	Shader lightingPassShader("Resources/Shaders/LightingPassShader.vert", "Resources/Shaders/LightingPassShader.frag");
+	//Shader lightingPassShader("Resources/Shaders/LightingPassShader.vert", "Resources/Shaders/LightingPassShader.frag");
+	Shader lightVolumeShader("Resources/Shaders/LightVolumeShader.vert", "Resources/Shaders/LightVolumeShader.frag");
 
 	//Model nanosuit("Resources/Models/nanosuit/nanosuit.obj");
 	//Model nanosuit("Resources/Models/yagyuu/scene.gltf");
@@ -214,12 +219,19 @@ int main()
 	};
 
 	glm::vec3 pointLightPositions[] = {
-	glm::vec3(1.0f,  2.0f,  0.0f)
-	//glm::vec3(-1.0f, 3.0f, 2.0f)
+	glm::vec3(1.0f,  2.0f,  0.0f),
+	glm::vec3(-0.5f, 1.0f, 1.0f)
 	//glm::vec3(-4.0f,  2.0f, -12.0f),
 	//glm::vec3(0.0f,  0.0f, -3.0f)
 	};
 	const unsigned int NUM_POINT_LIGHTS = sizeof(pointLightPositions) / sizeof(pointLightPositions[0]);
+
+	float pointLightColors[] = {
+		//R	    G    B
+		0.0f, 0.0f, 1.0f,
+		1.0f, 0.0f, 0.0f
+	};
+
 	//cout << NUM_POINT_LIGHTS << endl;
 
 	float skyboxVertices[] = {
@@ -278,14 +290,72 @@ int main()
 		 1.0f,  1.0f,  1.0f, 1.0f
 	};
 
+
+	// create 12 vertices of a icosahedron
+	float t = (1.0f + sqrt(5.0f)) / 2.0f;
+	float magnitude = sqrt(1.0f + t * t);
+	float small = 1 / magnitude;
+	float large = t / magnitude;
+
+	float sphereVertices[] = {
+		// part 1 - first 4 points
+		-small, large, 0.0f,	//point 0
+		small, large, 0.0f,
+		-small, -large, 0.0f,
+		small, -large, 0.0f,
+
+		// part 2 - second 4 points
+		0.0f, -small, large,	//point 4
+		0.0f, small, large,
+		0.0f, -small, -large,
+		0.0f, small, -large,
+
+		// part 3 - third 4 points
+		large, 0.0f, -small,	//point 8
+		large, 0.0f, small,
+		-large, 0.0f, -small,
+		-large, 0.0f, small		//point 11
+	};
+	unsigned int sphereIndices[] = {
+		// 5 faces around point 0
+		0, 11, 5,
+		0, 5, 1,
+		0, 1, 7,
+		0, 7, 10,
+		0, 10, 11,
+		// 5 adjacent faces
+		1, 5, 9,
+		5, 11, 4,
+		11, 10, 2,
+		10, 7, 6,
+		7, 1, 8,
+		// 5 faces around point 3
+		3, 9, 4,
+		3, 4, 2,
+		3, 2, 6,
+		3, 6, 8,
+		3, 8, 9,
+		// 5 adjacent faces
+		4, 9, 5,
+		2, 4, 11,
+		6, 2, 10,
+		8, 6, 7,
+		9, 8, 1
+	};
+	
+
 	// Create VBOs
-	unsigned int lampVBO,skyboxVBO,screenVBO;	// Vertex Buffer Object
+	unsigned int lampVBO,skyboxVBO,screenVBO,sphereVBO;	// Vertex Buffer Object
 	glGenBuffers(1, &lampVBO);	// Objects in C are structs, thus in OpenGL, int ids "point to" object memory
 	glGenBuffers(1, &skyboxVBO);
 	glGenBuffers(1, &screenVBO);
+	glGenBuffers(1, &sphereVBO);
+	// Create EBOs
+	unsigned int sphereEBO;
+	glGenBuffers(1, &sphereEBO);
 
 	// Create VAOs
-	unsigned int lampVAO, skyboxVAO,screenVAO;
+	unsigned int lampVAO, skyboxVAO,screenVAO,sphereVAO;
 	//light VAO
 	glGenVertexArrays(1, &lampVAO);
 	glBindVertexArray(lampVAO);
@@ -321,39 +391,67 @@ int main()
 	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
+	//sphere (for light volumes) VAO
+	glGenVertexArrays(1, &sphereVAO);
+	glBindVertexArray(sphereVAO);
+	// Copy vertex array data into VBO
+	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(sphereVertices), sphereVertices, GL_STATIC_DRAW);
+	// Copy index array data into EBO
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereEBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(sphereIndices), sphereIndices, GL_STATIC_DRAW);
+	// set the vertex attributes (only (x,y,z) position data for spheres)
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
+	//unbind VAO
 	glBindVertexArray(0);
 
 	// don't forget to 'use' the corresponding shader program first (to set the uniforms)
-	lightingPassShader.use();
+	lightVolumeShader.use();
 
 	//set light attributes
 	// Directional Light
-	//lightingPassShader.setVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
-	//lightingPassShader.setVec3("dirLight.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
-	//lightingPassShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
-	lightingPassShader.setVec3("dirLight.Color", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
+	//lightVolumeShader.setVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
+	//lightVolumeShader.setVec3("dirLight.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
+	//lightVolumeShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
+	lightVolumeShader.setVec3("dirLight.Color", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
 
 	//Point Lights
+	//light coverage distance at 7 (pixels ?)
+	float constant = 1.0f;
+	float linear = 0.7f;
+	float quadratic = 1.8f;
+	//float lightMax = fmaxf(fmaxf(lightColor.r, lightColor.g), lightColor.b);
+	float lightMax = 1.0f;
+	float threshold = 0.2f; //should be 0.25f ? (calculated as 1 / (numShades + 1) )
+	float radius =(-linear + sqrt(linear * linear - 4 * quadratic * (constant - lightMax / threshold))) / (2 * quadratic);
+
+	cout << "light radius: " << radius << endl;
+
 	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
-		//lightingPassShader.setVec3("pointLights[" + to_string(i) + "].ambient", 0.2f, 0.2f, 0.2f);
-		lightingPassShader.setVec3("pointLights[" + to_string(i) + "].Color", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
-		//lightingPassShader.setVec3("pointLights[" + to_string(i) + "].specular", 1.0f, 1.0f, 1.0f);
-		//lightingPassShader.setFloat("pointLights[" + to_string(i) + "].constant", 1.0f);
-		lightingPassShader.setFloat("pointLights[" + to_string(i) + "].Linear", 0.007f);
-		lightingPassShader.setFloat("pointLights[" + to_string(i) + "].Quadratic", 0.0002f);
+		//lightVolumeShader.setVec3("pointLights[" + to_string(i) + "].ambient", 0.2f, 0.2f, 0.2f);
+		lightVolumeShader.setVec3("pointLights[" + to_string(i) + "].Color", pointLightColors[3 * i], pointLightColors[3 * i + 1], pointLightColors[3 * i + 2]); // darken the light a bit to fit the scene
+		//lightVolumeShader.setVec3("pointLights[" + to_string(i) + "].specular", 1.0f, 1.0f, 1.0f);
+		
+		//lightVolumeShader.setFloat("pointLights[" + to_string(i) + "].constant", 1.0f); // moved to a constant value in the fragment shader
+		lightVolumeShader.setFloat("pointLights[" + to_string(i) + "].Linear", linear);
+		lightVolumeShader.setFloat("pointLights[" + to_string(i) + "].Quadratic", quadratic);
 	}
+
 	/*
 	//Spot Light
-	lightingPassShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
-	lightingPassShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
-	lightingPassShader.setFloat("spotLight.constant", 1.0f);
-	lightingPassShader.setFloat("spotLight.linear", 0.09f);
-	lightingPassShader.setFloat("spotLight.quadratic", 0.032f);
-	lightingPassShader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
-	lightingPassShader.setVec3("spotLight.diffuse", 0.8f, 0.8f, 0.8f); // darken the light a bit to fit the scene
-	lightingPassShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
+	lightVolumeShader.setFloat("spotLight.cutOff", glm::cos(glm::radians(12.5f)));
+	lightVolumeShader.setFloat("spotLight.outerCutOff", glm::cos(glm::radians(17.5f)));
+	lightVolumeShader.setFloat("spotLight.constant", 1.0f);
+	lightVolumeShader.setFloat("spotLight.linear", 0.09f);
+	lightVolumeShader.setFloat("spotLight.quadratic", 0.032f);
+	lightVolumeShader.setVec3("spotLight.ambient", 0.1f, 0.1f, 0.1f);
+	lightVolumeShader.setVec3("spotLight.diffuse", 0.8f, 0.8f, 0.8f); // darken the light a bit to fit the scene
+	lightVolumeShader.setVec3("spotLight.specular", 1.0f, 1.0f, 1.0f);
 	*/
+
 
 	//load Skybox
 	vector<string> faces
@@ -422,10 +520,10 @@ int main()
 		std::cout << "ERROR::FRAMEBUFFER:: Framebuffer is not complete!" << std::endl;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-	lightingPassShader.use();
-	lightingPassShader.setInt("gPosition", 0);
-	lightingPassShader.setInt("gNormal", 1);
-	lightingPassShader.setInt("gColorSpec", 2);
+	lightVolumeShader.use();
+	lightVolumeShader.setInt("gPosition", 0);
+	lightVolumeShader.setInt("gNormal", 1);
+	lightVolumeShader.setInt("gColorSpec", 2);
 
 	//enable stencil buffer
 	//glEnable(GL_STENCIL_TEST);
@@ -433,6 +531,9 @@ int main()
 
 	//enable backface culling (using default CCW winding order)
 	glEnable(GL_CULL_FACE);
+
+	//enable MSAA
+	//glEnable(GL_MULTISAMPLE);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -457,7 +558,8 @@ int main()
 		glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 
 		// rendering commands here
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		//glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);	//the clear color for the G Buffer must be black, because that is the only invalid normal color
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//enable z-buffer
@@ -523,15 +625,15 @@ int main()
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		lightingPassShader.use();
+		lightVolumeShader.use();
 		
 		//set light position uniforms (they change based on the camera's view matrix)
 		//Directional Light
-		lightingPassShader.setVec3("dirLight.Direction", glm::vec3(view* glm::vec4(1.0f, -1.0f, -1.0f, 0.0f)));
+		lightVolumeShader.setVec3("dirLight.Direction", glm::vec3(view* glm::vec4(1.0f, -1.0f, -1.0f, 0.0f)));
 		//Point Lights
 		pointLightPositions[0] = glm::vec3(cos(glfwGetTime()), 2.0f, sin(glfwGetTime()));
 		for (int i = 0; i < NUM_POINT_LIGHTS; i++)
-			lightingPassShader.setVec3("pointLights[" + to_string(i) + "].Position", glm::vec3(view * glm::vec4(pointLightPositions[i], 1.0f)));
+			lightVolumeShader.setVec3("pointLights[" + to_string(i) + "].Position", glm::vec3(view * glm::vec4(pointLightPositions[i], 1.0f)));
 
 		//send gBuffer textures
 
@@ -541,11 +643,37 @@ int main()
 		glBindTexture(GL_TEXTURE_2D, gNormal);
 		glActiveTexture(GL_TEXTURE2);
 		glBindTexture(GL_TEXTURE_2D, gColorSpec);
+
+		lightVolumeShader.use();
 		
-		//render quad
+		//render directional and ambient light
 		glBindVertexArray(screenVAO);
 		glDisable(GL_DEPTH_TEST);
+		lightVolumeShader.setMat4("mvp", glm::mat4(1.0f));
+		lightVolumeShader.setInt("lightID", -1);
 		glDrawArrays(GL_TRIANGLES, 0, 6);
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_ONE, GL_ONE);
+		//render light volume spheres
+		glBindVertexArray(sphereVAO);
+		for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+		{
+			//set mvp matrix
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, pointLightPositions[i]);
+			model = glm::scale(model, glm::vec3(radius));
+
+			lightVolumeShader.setMat4("mvp", projection * view * model);
+			//lightVolumeShader.setMat4("mv", view * model);
+
+			lightVolumeShader.setInt("lightID", i);
+
+			//Draw call
+			glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(sphereIndices[0]), GL_UNSIGNED_INT, 0); //use EBO
+			//glDrawArrays(GL_TRIANGLES, 0, 36);	//use VBO
+		}
+		glDisable(GL_BLEND);
 
 		//unbind VAO
 		glBindVertexArray(0);
@@ -570,11 +698,15 @@ int main()
 
 		for (int i = 0; i < NUM_POINT_LIGHTS; i++)
 		{
+			//set mvp matrix
 			glm::mat4 model = glm::mat4(1.0f);
 			model = glm::translate(model, pointLightPositions[i]);
 			model = glm::scale(model, glm::vec3(0.2f));
 
 			lampShader.setMat4("mvp", projection * view * model);
+
+			//set Lamp Color
+			lampShader.setVec3("LampColor", pointLightColors[3 * i], pointLightColors[3 * i + 1], pointLightColors[3 * i + 2]);
 
 			//Draw call
 			//glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); //use EBO
@@ -582,6 +714,8 @@ int main()
 		}
 		//unbind VAO
 		glBindVertexArray(0);
+
+
 
 		//skybox
 		//glDisable(GL_STENCIL_TEST); // dont use stencil for skybox
@@ -604,9 +738,9 @@ int main()
 
 
 		//draw text
-		//static GLint polygonMode;
-		//glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
-		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		static GLint polygonMode;
+		glGetIntegerv(GL_POLYGON_MODE, &polygonMode);
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//glDisable(GL_STENCIL_TEST);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
@@ -614,14 +748,39 @@ int main()
 		//glEnable(GL_STENCIL_TEST);
 		glEnable(GL_DEPTH_TEST);
 		glEnable(GL_CULL_FACE);
-		//if(polygonMode == GL_LINE)
-		//	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		if(polygonMode == GL_LINE)
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 		//else if(polygonMode == GL_FILL)
 		//	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//else if (polygonMode == GL_POINTS)
 		//	glPolygonMode(GL_FRONT_AND_BACK, GL_POINTS);
 
+		/*
+		glDisable(GL_CULL_FACE);
+		//render light volume spheres
+		lightVolumeShader.use();
+		glBindVertexArray(sphereVAO);
+		for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+		{
+			//set mvp matrix
+			glm::mat4 model = glm::mat4(1.0f);
+			model = glm::translate(model, pointLightPositions[i]);
+			model = glm::scale(model, glm::vec3(radius));
 
+			lightVolumeShader.setMat4("mvp", projection * view * model);
+			lightVolumeShader.setMat4("mv", view * model);
+
+			lightVolumeShader.setInt("lightID", i);
+
+			//Draw call
+			glDrawElements(GL_TRIANGLES, sizeof(sphereIndices) / sizeof(sphereIndices[0]), GL_UNSIGNED_INT, 0); //use EBO
+			//glDrawArrays(GL_TRIANGLES, 0, 36);	//use VBO
+		}
+		glEnable(GL_CULL_FACE);
+		*/
+
+		//unbind VAO
+		glBindVertexArray(0);
 
 
 		// check and call events and swap the buffers
@@ -633,9 +792,12 @@ int main()
 	glDeleteVertexArrays(1, &lampVAO);
 	glDeleteVertexArrays(1, &skyboxVAO);
 	glDeleteVertexArrays(1, &screenVAO);
+	glDeleteVertexArrays(1, &sphereVAO);
 	glDeleteBuffers(1, &lampVBO);
 	glDeleteBuffers(1, &skyboxVBO);
 	glDeleteBuffers(1, &screenVBO);
+	glDeleteBuffers(1, &sphereVBO);
+	glDeleteBuffers(1, &sphereEBO);	
 	glDeleteTextures(1, &cubemapTexture);
 	glDeleteFramebuffers(1, &gBuffer);
 	glDeleteTextures(1, &gPosition);

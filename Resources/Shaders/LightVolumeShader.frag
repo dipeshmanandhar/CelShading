@@ -1,7 +1,7 @@
 #version 330 core
 out vec4 FragColor;
   
-in vec2 TexCoord;
+//in vec2 TexCoord;
 
 uniform sampler2D gPosition;
 uniform sampler2D gNormal;
@@ -23,6 +23,8 @@ struct PointLight {
 uniform DirLight dirLight;
 #define NR_POINT_LIGHTS 2
 uniform PointLight pointLights[NR_POINT_LIGHTS];
+
+uniform int lightID; //-1 is directionalLight, >= 0 is a point light at same index
 
 float flatten(float value, int numColors)
 {
@@ -61,25 +63,28 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
 
 
 void main()
-{             
+{
+	vec2 TexCoord = vec2(gl_FragCoord.x / 800, gl_FragCoord.y / 600);
     // retrieve data from G-buffer
     vec3 Normal = texture(gNormal, TexCoord).rgb;
-	if (Normal == vec3(0.0f, 0.0f, 0.0f))
+	if (Normal == vec3(0.0f))
 		discard;
     vec3 FragPos = texture(gPosition, TexCoord).rgb;
     vec3 Albedo = texture(gColorSpec, TexCoord).rgb;
     float Specular = texture(gColorSpec, TexCoord).a;
+	vec3 viewDir = normalize(-FragPos);
 
-	
-    // then calculate lighting as usual
-    // ambient
-	vec3 result = Albedo * 0.1f; // hard-coded ambient component
-    vec3 viewDir = normalize(-FragPos);
-	
-	result += CalcDirLight(dirLight, Normal, viewDir, Albedo, Specular);
-	
-    for(int i = 0; i < NR_POINT_LIGHTS; ++i)
-		result += CalcPointLight(pointLights[i], Normal, FragPos, viewDir, Albedo, Specular);
+	vec3 result;
 
+	if(lightID < 0) //directional Light
+	{
+		// ambient
+		result = Albedo * 0.1f; // hard-coded ambient component
+		
+		result += CalcDirLight(dirLight, Normal, viewDir, Albedo, Specular);
+	}
+	else
+		result = CalcPointLight(pointLights[lightID], Normal, FragPos, viewDir, Albedo, Specular);
+	
 	FragColor = vec4(result, 1.0f);
 }
