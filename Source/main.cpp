@@ -60,7 +60,7 @@ unsigned int gBuffer;
 	// Textures
 unsigned int gPosition, gNormal, gColorSpec, cubemapTexture;
 	// Shaders
-Shader geometryShader, lampShader, skyboxShader, lightVolumeShader;
+Shader geometryShader, lampShader, skyboxShader, lightVolumeShader, stencilShader;
 	// Transformation Matrices
 glm::mat4 view, projection;
 	// Models
@@ -209,6 +209,7 @@ void initializeShaders()
 	lampShader.initialize("Resources/Shaders/LampShader.vert", "Resources/Shaders/LampShader.frag");
 	skyboxShader.initialize("Resources/Shaders/SkyboxShader.vert", "Resources/Shaders/SkyboxShader.frag");
 	lightVolumeShader.initialize("Resources/Shaders/LightVolumeShader.vert", "Resources/Shaders/LightVolumeShader.frag");
+	stencilShader.initialize("Resources/Shaders/StencilShader.vert", "Resources/Shaders/StencilShader.frag");
 }
 
 void initializeVAOs()
@@ -534,10 +535,10 @@ void sendConstantUniforms()
 	lightVolumeShader.setVec3("dirLight.Color", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
 
 	//Point Lights
-	//light coverage distance at 7 (pixels ?)
+	//light coverage distance at 13 (pixels ?)
 	float constant = 1.0f;
-	float linear = 0.7f;
-	float quadratic = 1.8f;
+	float linear = 0.35f;
+	float quadratic = 0.44f;
 	//float lightMax = fmaxf(fmaxf(lightColor.r, lightColor.g), lightColor.b);
 	float lightMax = 1.0f;
 	float threshold = 0.2f; //should be 0.25f ? (calculated as 1 / (numShades + 1) )
@@ -575,12 +576,15 @@ void sendConstantUniforms()
 
 void enableConstantTests()
 {
-	//enable z-buffer
+	// enable z-buffer
 	glEnable(GL_DEPTH_TEST);
 
-	//enable backface culling (using default CCW winding order)
+	// enable backface culling (using default CCW winding order)
 	glEnable(GL_CULL_FACE);
 
+	// set stencil testing properties
+	glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR_WRAP, GL_KEEP);
+	glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR_WRAP, GL_KEEP);
 }
 
 void setTransformationMatrices()
@@ -625,6 +629,41 @@ void geometryPass()
 	nanosuit.Draw(geometryShader);
 }
 
+void stencilPass()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
+
+	glEnable(GL_STENCIL_TEST);
+	glEnable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_STENCIL_BUFFER_BIT);
+
+	glStencilFunc(GL_ALWAYS, 0, 0);
+	glStencilMask(0xFF);
+
+	// "render" light volumes (spheres)
+	stencilShader.use();
+
+	glBindVertexArray(sphereVAO);
+	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+	{
+		//set mvp matrix
+		glm::mat4 model = glm::mat4(1.0f);
+		model = glm::translate(model, pointLightPositions[i]);
+		model = glm::scale(model, glm::vec3(lightVolumeRadius));
+
+		stencilShader.setMat4("mvp", projection * view * model);
+		
+		//Draw call
+		glDrawElements(GL_TRIANGLES, numSpherePoints, GL_UNSIGNED_INT, 0); //use EBO
+		//glDrawArrays(GL_TRIANGLES, 0, 36);	//use VBO
+	}
+
+	glEnable(GL_CULL_FACE);
+}
+
 void lightVolumePass()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
@@ -655,13 +694,20 @@ void lightVolumePass()
 	//render directional and ambient light
 	glBindVertexArray(screenVAO);
 	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_STENCIL_TEST);
+	glDisable(GL_CULL_FACE);
 	lightVolumeShader.setMat4("mvp", glm::mat4(1.0f));
 	lightVolumeShader.setInt("lightID", -1);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
 
+	//render light volume spheres
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_ONE, GL_ONE);
-	//render light volume spheres
+	glEnable(GL_STENCIL_TEST);
+	glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
+	glStencilMask(0x00);	// disable writing to stencil buffer
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
 	glBindVertexArray(sphereVAO);
 	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
@@ -679,6 +725,7 @@ void lightVolumePass()
 		glDrawElements(GL_TRIANGLES, numSpherePoints, GL_UNSIGNED_INT, 0); //use EBO
 		//glDrawArrays(GL_TRIANGLES, 0, 36);	//use VBO
 	}
+	glCullFace(GL_BACK);
 	glDisable(GL_BLEND);
 
 	//unbind VAO
@@ -836,6 +883,9 @@ int main()
 		geometryPass();
 
 		// Second pass ----------------------------------------------------------------------------------------------
+		stencilPass();
+
+		// Third pass ----------------------------------------------------------------------------------------------
 		lightVolumePass();
 
 		//now do forward rendering --------------------------------------------------------------------------------
