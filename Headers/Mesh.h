@@ -17,7 +17,7 @@
 #include <string>
 
 //Created H Files
-#include "../Headers/Shader.h"
+#include "Shader.h"
 
 using namespace std;
 

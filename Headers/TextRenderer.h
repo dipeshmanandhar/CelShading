@@ -12,9 +12,9 @@
 #include <string>
 
 //Created H Files
-#include "../Headers/Shader.h"
-#include "../Headers/Loader.h"
-#include "../Headers/Screen.h"
+#include "Shader.h"
+#include "Loader.h"
+#include "Screen.h"
 
 using namespace std;
 
@@ -22,8 +22,25 @@ class TextRenderer {
 public:
 	/*  TextRenderer Data  */
 	
-	/*  Functions  */
+	/* Constructors */
+	TextRenderer()
+	{
+		//do nothing
+	}
 	TextRenderer(const char* bitmapFontFile)
+	{
+		initialize(bitmapFontFile);
+	}
+
+	~TextRenderer()
+	{
+		glDeleteVertexArrays(1, &VAO);
+		glDeleteBuffers(1, &VBO);
+		glDeleteTextures(1, &bitmapFont);
+	}
+
+	/*  Functions  */
+	void initialize(const char* bitmapFontFile)
 	{
 		stbi_set_flip_vertically_on_load(true);
 		bitmapFont = Loader::TextureFromFile(bitmapFontFile, "Resources/Fonts");
@@ -32,15 +49,7 @@ public:
 		glGenBuffers(1, &VBO);	// Objects in C are structs, thus in OpenGL, int ids "point to" object memory
 		glGenVertexArrays(1, &VAO);
 
-		shader = new Shader("Resources/Shaders/TextShader.vert", "Resources/Shaders/TextShader.frag");
-	}
-	~TextRenderer()
-	{
-		glDeleteVertexArrays(1, &VAO);
-		glDeleteBuffers(1, &VBO);
-		glDeleteTextures(1, &bitmapFont);
-
-		delete shader;
+		shader.initialize("Resources/Shaders/TextShader.vert", "Resources/Shaders/TextShader.frag");
 	}
 	// (xPos, yPos) is the NDC top left corner of the text to be rendered (default value = top left corner of NDC screen)
 	// width and height are the respective dimension sizes to use per character
@@ -103,9 +112,9 @@ public:
 		glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 4 * sizeof(float), (void*)(2 * sizeof(float)));
 		glEnableVertexAttribArray(1);
 		// set the texture uniform in the Shader
-		shader->use();
+		shader.use();
 		glActiveTexture(GL_TEXTURE0);
-		shader->setInt("bitmapFont", 0);
+		shader.setInt("bitmapFont", 0);
 		glBindTexture(GL_TEXTURE_2D, bitmapFont);
 
 		// draw mesh
@@ -118,7 +127,7 @@ public:
 private:
 	/*  Render data  */
 	unsigned int bitmapFont, VAO, VBO;
-	Shader* shader;
+	Shader shader;
 	const unsigned int horizontalChars = 16;
 	const unsigned int verticalChars = 16;
 	const float texelCellWidth = 1.0f / horizontalChars;

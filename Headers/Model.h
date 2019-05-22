@@ -6,7 +6,6 @@
 //External Libraries for OpenGL (GLFW and GLAD)
 #include <glad/glad.h> // NOTE: always include GLAD before GLFW
 #include <GLFW/glfw3.h>
-#include "Loader.h"
 
 //External Library for Model Loading (Assimp)
 #include <assimp/Importer.hpp>
@@ -18,18 +17,27 @@
 #include <vector>
 
 //Created H Files
-#include "../Headers/Shader.h"
-#include "../Headers/Mesh.h"
-#include "../Headers/Loader.h"
+#include "Shader.h"
+#include "Mesh.h"
+#include "Loader.h"
 
 using namespace std;
 
 class Model
 {
 public:
+	/* Constructor */
+	Model()
+	{
+		//do nothing
+	}
+	Model(const char* path)
+	{
+		initialize(path);
+	}
 	/*  Functions   */
 	//TODO: implement destructor (need to deallocate glTextures)
-	Model(const char* path)
+	void initialize(const char* path)
 	{
 		loadModel(path);
 	}
