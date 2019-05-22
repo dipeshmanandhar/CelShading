@@ -35,6 +35,8 @@ using namespace std;
 
 // compile-time constants
 #define PI 3.14159265358979323846f
+#define NEAR_PLANE 0.1f
+#define FAR_PLANE 100.0f
 
 // Global Variables ------------------------------------------------------------------------------------
 
@@ -593,14 +595,14 @@ void setTransformationMatrices()
 		//view matrix
 	view = camera.getViewMatrix();
 		//perspective projection matrix
-	projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, 0.1f, 100.0f);
+	projection = glm::perspective(glm::radians(camera.Zoom), (float)SCREEN_WIDTH / (float)SCREEN_HEIGHT, NEAR_PLANE, FAR_PLANE);
 }
 
 void geometryPass()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);	//the clear color for the G Buffer must be black, because that is the only invalid normal color
+	glClearColor(-1.0f, -1.0f, -1.0f, 1.0f);	//the clear color for the G Buffer must be an invalid normal color
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -667,7 +669,7 @@ void stencilPass()
 void lightVolumePass()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	lightVolumeShader.use();
@@ -693,16 +695,20 @@ void lightVolumePass()
 
 	//render directional and ambient light
 	glBindVertexArray(screenVAO);
-	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_ALWAYS);
 	glDisable(GL_STENCIL_TEST);
 	glDisable(GL_CULL_FACE);
 	lightVolumeShader.setMat4("mvp", glm::mat4(1.0f));
 	lightVolumeShader.setInt("lightID", -1);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glDepthFunc(GL_LESS);
 
 	//render light volume spheres
+	glDisable(GL_DEPTH_TEST);
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_ONE, GL_ONE);
+	glBlendFunc(GL_DST_ALPHA, GL_ONE);
+	//glBlendFuncSeparate(GL_DST_ALPHA, GL_ONE, GL_ONE, GL_ZERO);
 	glEnable(GL_STENCIL_TEST);
 	glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
 	glStencilMask(0x00);	// disable writing to stencil buffer

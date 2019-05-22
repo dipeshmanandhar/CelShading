@@ -61,6 +61,27 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     return diffuse + specular;
 }
 
+bool isEdge()
+{
+	vec3 gx = texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y + 1) / 600)).rgb +
+			  2 * texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y) / 600)).rgb +
+			  texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y - 1) / 600)).rgb -
+			  ( texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y + 1) / 600)).rgb +
+			  2 * texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y) / 600)).rgb +
+			  texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y - 1) / 600)).rgb );
+
+	vec3 gy = texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y + 1) / 600)).rgb +
+			  2 * texture(gNormal, vec2((gl_FragCoord.x) / 800, (gl_FragCoord.y + 1) / 600)).rgb +
+			  texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y + 1) / 600)).rgb -
+			  ( texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y - 1) / 600)).rgb +
+			  2 * texture(gNormal, vec2((gl_FragCoord.x) / 800, (gl_FragCoord.y - 1) / 600)).rgb +
+			  texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y - 1) / 600)).rgb );
+
+	//vec3 gradient = sqrt(gx * gx + gy * gy);
+	vec3 gradient = abs(gx) + abs(gy); // max value per component is 8, min is 0
+	float threshold = 4; // max per component * 50%
+	return max(max(gradient.r, gradient.g), gradient.b) > threshold;
+}
 
 void main()
 {
@@ -76,12 +97,21 @@ void main()
 
 	vec3 result;
 
+	//TODO: move the if part to a separate shader, as this if conditional is poorly optimized by GLSL
 	if(lightID < 0) //directional Light
 	{
-		// ambient
-		result = Albedo * 0.1f; // hard-coded ambient component
+		if(isEdge())
+		{
+			FragColor = vec4(0.0f);
+			return;
+		}
+		else
+		{
+			// ambient
+			result = Albedo * 0.1f; // hard-coded ambient component
 		
-		result += CalcDirLight(dirLight, Normal, viewDir, Albedo, Specular);
+			result += CalcDirLight(dirLight, Normal, viewDir, Albedo, Specular);
+		}
 	}
 	else
 		result = CalcPointLight(pointLights[lightID], Normal, FragPos, viewDir, Albedo, Specular);
