@@ -26,6 +26,10 @@ uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 uniform int lightID; //-1 is directionalLight, >= 0 is a point light at same index
 
+#define SCREEN_WIDTH 800
+#define SCREEN_HEIGHT 600
+#define SOBEL_OFFSET 2
+
 float flatten(float value, int numColors)
 {
 	float levels = numColors - 1;
@@ -63,34 +67,35 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
 
 bool isEdge()
 {
-	vec3 gx = texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y + 1) / 600)).rgb +
-			  2 * texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y) / 600)).rgb +
-			  texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y - 1) / 600)).rgb -
-			  ( texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y + 1) / 600)).rgb +
-			  2 * texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y) / 600)).rgb +
-			  texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y - 1) / 600)).rgb );
+	vec3 gx = texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+			  2 * texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y) / SCREEN_HEIGHT)).rgb +
+			  texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb -
+			  ( texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+			  2 * texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y) / SCREEN_HEIGHT)).rgb +
+			  texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb );
 
-	vec3 gy = texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y + 1) / 600)).rgb +
-			  2 * texture(gNormal, vec2((gl_FragCoord.x) / 800, (gl_FragCoord.y + 1) / 600)).rgb +
-			  texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y + 1) / 600)).rgb -
-			  ( texture(gNormal, vec2((gl_FragCoord.x + 1) / 800, (gl_FragCoord.y - 1) / 600)).rgb +
-			  2 * texture(gNormal, vec2((gl_FragCoord.x) / 800, (gl_FragCoord.y - 1) / 600)).rgb +
-			  texture(gNormal, vec2((gl_FragCoord.x - 1) / 800, (gl_FragCoord.y - 1) / 600)).rgb );
+	vec3 gy = texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+			  2 * texture(gNormal, vec2((gl_FragCoord.x) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+			  texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb -
+			  ( texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+			  2 * texture(gNormal, vec2((gl_FragCoord.x) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+			  texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb );
 
 	//vec3 gradient = sqrt(gx * gx + gy * gy);
 	vec3 gradient = abs(gx) + abs(gy); // max value per component is 8, min is 0
-	float threshold = 4; // max per component * 50%
+	float threshold = 4 + gl_FragCoord.z; // max per component * 50%
+	
 	return max(max(gradient.r, gradient.g), gradient.b) > threshold;
 }
 
 void main()
 {
-	vec2 TexCoord = vec2(gl_FragCoord.x / 800, gl_FragCoord.y / 600);
+	vec2 TexCoord = vec2(gl_FragCoord.x / SCREEN_WIDTH, gl_FragCoord.y / SCREEN_HEIGHT);
     // retrieve data from G-buffer
     vec3 Normal = texture(gNormal, TexCoord).rgb;
-	if (Normal == vec3(0.0f))
+	if (Normal == vec3(-1.0f))
 		discard;
-    vec3 FragPos = texture(gPosition, TexCoord).rgb;
+	vec3 FragPos = texture(gPosition, TexCoord).rgb;
     vec3 Albedo = texture(gColorSpec, TexCoord).rgb;
     float Specular = texture(gColorSpec, TexCoord).a;
 	vec3 viewDir = normalize(-FragPos);

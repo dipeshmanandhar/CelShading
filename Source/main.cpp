@@ -37,6 +37,7 @@ using namespace std;
 #define PI 3.14159265358979323846f
 #define NEAR_PLANE 0.1f
 #define FAR_PLANE 100.0f
+#define PIXEL_SCALE 1
 
 // Global Variables ------------------------------------------------------------------------------------
 
@@ -446,7 +447,7 @@ void initializeGBuffer()
 	// - position color buffer (16 or 32 bit float per component accuracy)
 	glGenTextures(1, &gPosition);
 	glBindTexture(GL_TEXTURE_2D, gPosition);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCREEN_WIDTH / PIXEL_SCALE, SCREEN_HEIGHT / PIXEL_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
@@ -454,7 +455,7 @@ void initializeGBuffer()
 	// - normal color buffer (16 or 32 bit float per component accuracy)
 	glGenTextures(1, &gNormal);
 	glBindTexture(GL_TEXTURE_2D, gNormal);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCREEN_WIDTH / PIXEL_SCALE, SCREEN_HEIGHT / PIXEL_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, gNormal, 0);
@@ -462,7 +463,7 @@ void initializeGBuffer()
 	// - color + specular color buffer (8 bit byte per component accuracy)
 	glGenTextures(1, &gColorSpec);
 	glBindTexture(GL_TEXTURE_2D, gColorSpec);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, SCREEN_WIDTH / PIXEL_SCALE, SCREEN_HEIGHT / PIXEL_SCALE, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT2, GL_TEXTURE_2D, gColorSpec, 0);
@@ -475,7 +476,7 @@ void initializeGBuffer()
 	unsigned int rbo;
 	glGenRenderbuffers(1, &rbo);
 	glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH, SCREEN_HEIGHT);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, SCREEN_WIDTH / PIXEL_SCALE, SCREEN_HEIGHT / PIXEL_SCALE);
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
 	// attach it to currently bound framebuffer object
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
@@ -543,7 +544,7 @@ void sendConstantUniforms()
 	float quadratic = 0.44f;
 	//float lightMax = fmaxf(fmaxf(lightColor.r, lightColor.g), lightColor.b);
 	float lightMax = 1.0f;
-	float threshold = 0.2f; //should be 0.25f ? (calculated as 1 / (numShades + 1) )
+	float threshold = 0.15f; //should be 0.25f ? (calculated as 1 / (numShades + 1) )
 	lightVolumeRadius = (-linear + sqrt(linear * linear - 4 * quadratic * (constant - lightMax / threshold))) / (2 * quadratic);
 
 	cout << "Light Volume Radius: " << lightVolumeRadius << endl;
@@ -583,10 +584,6 @@ void enableConstantTests()
 
 	// enable backface culling (using default CCW winding order)
 	glEnable(GL_CULL_FACE);
-
-	// set stencil testing properties
-	glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR_WRAP, GL_KEEP);
-	glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR_WRAP, GL_KEEP);
 }
 
 void setTransformationMatrices()
@@ -633,16 +630,25 @@ void geometryPass()
 
 void stencilPass()
 {
+	//copy the depth buffer of the gBuffer into the default framebuffer
+	glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
+	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
+	glBlitFramebuffer(0, 0, SCREEN_WIDTH / PIXEL_SCALE, SCREEN_HEIGHT / PIXEL_SCALE, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
 
 	glEnable(GL_STENCIL_TEST);
 	glEnable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
+	glDepthMask(GL_FALSE);
+	//glDisable(GL_CULL_FACE);
 
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 	glClear(GL_STENCIL_BUFFER_BIT);
 
-	glStencilFunc(GL_ALWAYS, 0, 0);
+	//glStencilOpSeparate(GL_BACK, GL_KEEP, GL_INCR_WRAP, GL_KEEP);
+	//glStencilOpSeparate(GL_FRONT, GL_KEEP, GL_DECR_WRAP, GL_KEEP);
+
+	glStencilOp(GL_KEEP, GL_REPLACE, GL_KEEP);
+	glStencilFunc(GL_ALWAYS, 1, 0xFF);
 	glStencilMask(0xFF);
 
 	// "render" light volumes (spheres)
@@ -663,13 +669,14 @@ void stencilPass()
 		//glDrawArrays(GL_TRIANGLES, 0, 36);	//use VBO
 	}
 
+	glDepthMask(GL_TRUE);
 	glEnable(GL_CULL_FACE);
 }
 
 void lightVolumePass()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	lightVolumeShader.use();
@@ -695,23 +702,27 @@ void lightVolumePass()
 
 	//render directional and ambient light
 	glBindVertexArray(screenVAO);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_ALWAYS);
+	glDisable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthFunc(GL_ALWAYS);
 	glDisable(GL_STENCIL_TEST);
 	glDisable(GL_CULL_FACE);
 	lightVolumeShader.setMat4("mvp", glm::mat4(1.0f));
 	lightVolumeShader.setInt("lightID", -1);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDepthFunc(GL_LESS);
+	//glDepthFunc(GL_LESS);
 
 	//render light volume spheres
-	glDisable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
+	glDepthMask(GL_FALSE);
+	glDepthFunc(GL_GEQUAL);
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_DST_ALPHA, GL_ONE);
 	//glBlendFuncSeparate(GL_DST_ALPHA, GL_ONE, GL_ONE, GL_ZERO);
 	glEnable(GL_STENCIL_TEST);
-	glStencilFunc(GL_NOTEQUAL, 0, 0xFF);
-	glStencilMask(0x00);	// disable writing to stencil buffer
+	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+	glStencilFunc(GL_EQUAL, 0, 0xFF);
+	glStencilMask(0xFF);	// enable writing to stencil buffer
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glBindVertexArray(sphereVAO);
@@ -731,6 +742,8 @@ void lightVolumePass()
 		glDrawElements(GL_TRIANGLES, numSpherePoints, GL_UNSIGNED_INT, 0); //use EBO
 		//glDrawArrays(GL_TRIANGLES, 0, 36);	//use VBO
 	}
+	glDepthMask(GL_TRUE);
+	glDepthFunc(GL_LESS);
 	glCullFace(GL_BACK);
 	glDisable(GL_BLEND);
 
@@ -820,10 +833,6 @@ void drawText()
 
 void forwardRenderingPass()
 {
-	//copy the depth buffer of the gBuffer into the default framebuffer
-	glBindFramebuffer(GL_READ_FRAMEBUFFER, gBuffer);
-	glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0); // write to default framebuffer
-	glBlitFramebuffer(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, GL_DEPTH_BUFFER_BIT, GL_NEAREST);
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 	drawLamps();
