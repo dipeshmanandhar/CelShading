@@ -67,88 +67,94 @@ vec3 CalcPointLight(PointLight light, vec3 normal, vec3 fragPos, vec3 viewDir, v
     return diffuse + specular;
 }
 
-bool isEdge()
-{
-	vec3 gx = texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
-			  2 * texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y) / SCREEN_HEIGHT)).rgb +
-			  texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb -
-			  ( texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
-			  2 * texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y) / SCREEN_HEIGHT)).rgb +
-			  texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb );
-
-	vec3 gy = texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
-			  2 * texture(gNormal, vec2((gl_FragCoord.x) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
-			  texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb -
-			  ( texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
-			  2 * texture(gNormal, vec2((gl_FragCoord.x) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
-			  texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb );
-
-	//vec3 gradient = sqrt(gx * gx + gy * gy);
-	vec3 gradient = abs(gx) + abs(gy); // max value per component is 8, min is 0
-	float threshold = 4; // max per component * 50%
-	
-	return max(max(gradient.r, gradient.g), gradient.b) > threshold;
-}
+//bool isEdge()
+//{
+//	vec3 gx = texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+//			  2 * texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y) / SCREEN_HEIGHT)).rgb +
+//			  texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb -
+//			  ( texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+//			  2 * texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y) / SCREEN_HEIGHT)).rgb +
+//			  texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb );
+//	
+//	vec3 gy = texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+//			  2 * texture(gNormal, vec2((gl_FragCoord.x) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+//			  texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb -
+//			  ( texture(gNormal, vec2((gl_FragCoord.x + SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+//			  2 * texture(gNormal, vec2((gl_FragCoord.x) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb +
+//			  texture(gNormal, vec2((gl_FragCoord.x - SOBEL_OFFSET) / SCREEN_WIDTH, (gl_FragCoord.y - SOBEL_OFFSET) / SCREEN_HEIGHT)).rgb );
+//
+//	//vec3 gradient = sqrt(gx * gx + gy * gy);
+//	vec3 gradient = abs(gx) + abs(gy); // max value per component is 8, min is 0
+//	float threshold = 4; // max per component * 50%
+//	
+//	return max(max(gradient.r, gradient.g), gradient.b) > threshold;
+//}
 
 void main()
 {
 	vec2 TexCoord = vec2(gl_FragCoord.x / SCREEN_WIDTH, gl_FragCoord.y / SCREEN_HEIGHT);
     // retrieve data from G-buffer
     vec3 Normal = texture(gNormal, TexCoord).rgb;
-	//if (Normal == vec3(-1.0f))
-	//	discard;
+	if (Normal == vec3(-1.0f))
+		discard;
 	vec3 FragPos = texture(gPosition, TexCoord).rgb;
-    vec3 Albedo = texture(gColorSpec, TexCoord).rgb;
-    float Specular = texture(gColorSpec, TexCoord).a;
+	vec4 colorSpec = texture(gColorSpec, TexCoord);
+	if(colorSpec == vec4(0.0f))
+	{
+		FragColor = vec4(vec3(0.0f), 1.0f);
+		return;
+	}
+    vec3 Albedo = colorSpec.rgb;
+    float Specular = colorSpec.a;
 	vec3 viewDir = normalize(-FragPos);
 
 	vec3 result;
 	
 	//float z = -FragPos.z / FAR_PLANE;
 
-	gl_FragDepth = (1/-FragPos.z - 1/NEAR_PLANE) / (1/FAR_PLANE - 1/NEAR_PLANE);
+	//gl_FragDepth = (1/-FragPos.z - 1/NEAR_PLANE) / (1/FAR_PLANE - 1/NEAR_PLANE);
 	//gl_FragDepth = z;
 
 	//TODO: move the if part to a separate shader, as this if conditional is poorly optimized by GLSL
 	if(lightID < 0) //directional Light
 	{
-		if(isEdge())
-		{
-			FragColor = vec4(0.0f);
-			for(int i = 0 ; i < 4 ; i++)
-			{
-				float z = texture(gPosition, vec2((gl_FragCoord.x + SOBEL_OFFSET * ((i - 2)%2) ) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET * ((i - 1)%2) ) / SCREEN_HEIGHT)).z;
-				if(z != -1.0f)
-				{
-					gl_FragDepth = (1/-z - 1/NEAR_PLANE) / (1/FAR_PLANE - 1/NEAR_PLANE);
-					return;
-				}
-			}
-			for(int i = 0 ; i < 4 ; i++)
-			{
-				float z = texture(gPosition, vec2((gl_FragCoord.x + SOBEL_OFFSET * ((i - 2)%2) ) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET * ((i - 2)%2) ) / SCREEN_HEIGHT)).z;
-				if(z != -1.0f)
-				{
-					gl_FragDepth = (1/-z - 1/NEAR_PLANE) / (1/FAR_PLANE - 1/NEAR_PLANE);
-					return;
-				}
-			}
-			return;
-		}
-		else
-		{
-			if (Normal == vec3(-1.0f))
-				discard;
+		//if(isEdge())
+		//{
+		//	FragColor = vec4(0.0f);
+		//	for(int i = 0 ; i < 4 ; i++)
+		//	{
+		//		float z = texture(gPosition, vec2((gl_FragCoord.x + SOBEL_OFFSET * ((i - 2)%2) ) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET * ((i - 1)%2) ) / SCREEN_HEIGHT)).z;
+		//		if(z != -1.0f)
+		//		{
+		//			gl_FragDepth = (1/-z - 1/NEAR_PLANE) / (1/FAR_PLANE - 1/NEAR_PLANE);
+		//			return;
+		//		}
+		//	}
+		//	for(int i = 0 ; i < 4 ; i++)
+		//	{
+		//		float z = texture(gPosition, vec2((gl_FragCoord.x + SOBEL_OFFSET * ((i - 2)%2) ) / SCREEN_WIDTH, (gl_FragCoord.y + SOBEL_OFFSET * ((i - 2)%2) ) / SCREEN_HEIGHT)).z;
+		//		if(z != -1.0f)
+		//		{
+		//			gl_FragDepth = (1/-z - 1/NEAR_PLANE) / (1/FAR_PLANE - 1/NEAR_PLANE);
+		//			return;
+		//		}
+		//	}
+		//	return;
+		//}
+		//else
+		//{
+			//if (Normal == vec3(-1.0f))
+			//	discard;
 			// ambient
 			result = Albedo * 0.1f; // hard-coded ambient component
 		
 			result += CalcDirLight(dirLight, Normal, viewDir, Albedo, Specular);
-		}
+		//}
 	}
 	else
 	{
-		if (Normal == vec3(-1.0f))
-			discard;
+		//if (Normal == vec3(-1.0f))
+		//	discard;
 		result = CalcPointLight(pointLights[lightID], Normal, FragPos, viewDir, Albedo, Specular);
 	}
 	

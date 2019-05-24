@@ -515,7 +515,7 @@ void initialize()
 {
 	initializeShaders();
 	
-	nanosuit.initialize("Resources/Models/Chiya/Chiya.fbx");
+	nanosuit.initialize("Resources/Models/Chiya/Test.fbx");
 
 	initializeVAOs();
 	initializeGBuffer();
@@ -705,22 +705,22 @@ void lightVolumePass()
 
 	//render directional and ambient light
 	glBindVertexArray(screenVAO);
-	//glDisable(GL_DEPTH_TEST);
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_ALWAYS);
+	glDisable(GL_DEPTH_TEST);
+	//glEnable(GL_DEPTH_TEST);
+	//glDepthFunc(GL_ALWAYS);
 	glDisable(GL_STENCIL_TEST);
 	glDisable(GL_CULL_FACE);
 	lightVolumeShader.setMat4("mvp", glm::mat4(1.0f));
 	lightVolumeShader.setInt("lightID", -1);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-	glDepthFunc(GL_LESS);
+	//glDepthFunc(GL_LESS);
 
 	//render light volume spheres
 	glEnable(GL_DEPTH_TEST);
 	glDepthMask(GL_FALSE);
 	glDepthFunc(GL_GEQUAL);
 	glEnable(GL_BLEND);
-	glBlendFunc(GL_DST_ALPHA, GL_ONE);
+	glBlendFunc(GL_ONE, GL_ONE);
 	//glBlendFuncSeparate(GL_DST_ALPHA, GL_ONE, GL_ONE, GL_ZERO);
 	glEnable(GL_STENCIL_TEST);
 	glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
@@ -753,6 +753,33 @@ void lightVolumePass()
 	//unbind VAO
 	glBindVertexArray(0);
 }
+
+/*
+void drawOutlines()
+{
+	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
+
+	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_FRONT);
+
+	borderShader.use();
+
+	//model matrix
+	glm::mat4 model(1.0f);
+	//model = glm::scale(model, glm::vec3(0.1f));
+	//model = glm::translate(model, cubePositions[i]);
+	//model = glm::rotate(model, i * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
+	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
+
+	glm::mat4 mvp = projection * view * model;
+	borderShader.setMat4("mvp", mvp);
+
+	nanosuit.Draw(borderShader);
+
+	glCullFace(GL_BACK);
+}
+*/
 
 void drawLamps()
 {
@@ -838,6 +865,7 @@ void forwardRenderingPass()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+	//drawOutlines();
 	drawLamps();
 	drawSkybox();
 	drawText();
