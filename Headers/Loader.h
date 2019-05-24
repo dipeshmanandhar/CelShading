@@ -26,18 +26,27 @@ namespace Loader
 		unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
 		if (data)
 		{
-			GLenum format;
+			GLenum format1, format2;
 			if (nrComponents == 1)
-				format = GL_RED;
+			{
+				format1 = GL_RED;
+				format2 = GL_RED;
+			}
 			else if (nrComponents == 3)
-				format = GL_RGB;
+			{
+				format1 = GL_SRGB;
+				format2 = GL_RGB;
+			}
 			else if (nrComponents == 4)
-				format = GL_RGBA;
+			{
+				format1 = GL_SRGB_ALPHA;
+				format2 = GL_RGBA;
+			}
 			else
 				cout << "ERROR: nrComponents not specified" << endl;
 
 			glBindTexture(GL_TEXTURE_2D, textureID);
-			glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+			glTexImage2D(GL_TEXTURE_2D, 0, format1, width, height, 0, format2, GL_UNSIGNED_BYTE, data);
 			glGenerateMipmap(GL_TEXTURE_2D);
 
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -69,7 +78,7 @@ namespace Loader
 			if (data)
 			{
 				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-					0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
+					0, GL_SRGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data
 				);
 				stbi_image_free(data);
 			}

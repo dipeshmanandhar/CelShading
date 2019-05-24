@@ -5,5 +5,5 @@ uniform vec3 LampColor;
 
 void main()
 {
-	FragColor = vec4(LampColor, 1.0f);
+	FragColor = vec4(LampColor / (LampColor + vec3(1.0f)), 1.0f);
 }

@@ -84,7 +84,7 @@ glm::vec3 pointLightPositions[] = {
 const unsigned int NUM_POINT_LIGHTS = sizeof(pointLightPositions) / sizeof(pointLightPositions[0]);
 float pointLightColors[] = {
 	//R	    G    B
-	0.0f, 0.0f, 1.0f,
+	0.0f, 0.0f, 100.0f,
 	1.0f, 0.0f, 0.0f
 };
 float lightVolumeRadius;
@@ -535,7 +535,7 @@ void sendConstantUniforms()
 	//lightVolumeShader.setVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
 	//lightVolumeShader.setVec3("dirLight.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
 	//lightVolumeShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
-	lightVolumeShader.setVec3("dirLight.Color", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
+	lightVolumeShader.setVec3("dirLight.Color", 1.0f, 1.0f, 1.0f); // darken the light a bit to fit the scene
 
 	//Point Lights
 	//light coverage distance at 13 (pixels ?)
@@ -584,6 +584,9 @@ void enableConstantTests()
 
 	// enable backface culling (using default CCW winding order)
 	glEnable(GL_CULL_FACE);
+
+	// enable gamma correction
+	glEnable(GL_FRAMEBUFFER_SRGB);
 }
 
 void setTransformationMatrices()
@@ -599,7 +602,7 @@ void geometryPass()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 
-	glClearColor(-1.0f, -1.0f, -1.0f, 1.0f);	//the clear color for the G Buffer must be an invalid normal color
+	glClearColor(-1.0f, -1.0f, -1.0f, -1.0f);	//the clear color for the G Buffer must be an invalid normal color
 	//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -702,15 +705,15 @@ void lightVolumePass()
 
 	//render directional and ambient light
 	glBindVertexArray(screenVAO);
-	glDisable(GL_DEPTH_TEST);
-	//glEnable(GL_DEPTH_TEST);
-	//glDepthFunc(GL_ALWAYS);
+	//glDisable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_ALWAYS);
 	glDisable(GL_STENCIL_TEST);
 	glDisable(GL_CULL_FACE);
 	lightVolumeShader.setMat4("mvp", glm::mat4(1.0f));
 	lightVolumeShader.setInt("lightID", -1);
 	glDrawArrays(GL_TRIANGLES, 0, 6);
-	//glDepthFunc(GL_LESS);
+	glDepthFunc(GL_LESS);
 
 	//render light volume spheres
 	glEnable(GL_DEPTH_TEST);
