@@ -25,11 +25,11 @@
 //Created H Files
 #include "../Headers/Shader.h"
 #include "../Headers/Camera.h"
-#include "../Headers/Mesh.h"
+//#include "../Headers/Mesh.h"
 #include "../Headers/Model.h"
 #include "../Headers/TextRenderer.h"
-#include "../Headers/Loader.h"
 #include "../Headers/Screen.h"
+#include "../Headers/Loader.h"
 
 using namespace std;
 
@@ -66,8 +66,6 @@ unsigned int gPosition, gNormal, gColorSpec, cubemapTexture;
 Shader geometryShader, lampShader, skyboxShader, lightVolumeShader, stencilShader;
 	// Transformation Matrices
 glm::mat4 view, projection;
-	// Models
-Model nanosuit;
 	// VBOs
 unsigned int lampVBO, skyboxVBO, screenVBO, sphereVBO;
 	// EBOs
@@ -515,7 +513,8 @@ void initialize()
 {
 	initializeShaders();
 	
-	nanosuit.initialize("Resources/Models/Chiya/Test.fbx");
+	//nanosuit.initialize("Resources/Models/Chiya/Test.fbx");
+	Loader::loadModels();
 
 	initializeVAOs();
 	initializeGBuffer();
@@ -628,7 +627,7 @@ void geometryPass()
 	geometryShader.setMat3("mvNormal", transpose(inverse(glm::mat3(mv))));
 
 	//draw model
-	nanosuit.Draw(geometryShader);
+	Loader::models[Loader::CHIYA].Draw(geometryShader);
 }
 
 void stencilPass()
