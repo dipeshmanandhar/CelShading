@@ -30,6 +30,7 @@
 #include "../Headers/TextRenderer.h"
 #include "../Headers/Screen.h"
 #include "../Headers/Loader.h"
+#include "../Headers/Entity.h"
 
 using namespace std;
 
@@ -87,9 +88,10 @@ float pointLightColors[] = {
 };
 float lightVolumeRadius;
 unsigned int numSpherePoints;
-	//Text
+	// Text
 TextRenderer textRenderer;
-
+	// Entities
+Entity player;
 
 // Functions ---------------------------------------------------------------------------------------------
 
@@ -515,6 +517,7 @@ void initialize()
 	
 	//nanosuit.initialize("Resources/Models/Chiya/Test.fbx");
 	Loader::loadModels();
+	player.setModel(Loader::CHIYA);
 
 	initializeVAOs();
 	initializeGBuffer();
@@ -612,22 +615,7 @@ void geometryPass()
 	//draw scene
 	geometryShader.use();
 
-	//model matrix
-	glm::mat4 model = glm::mat4(1.0f);
-	//model = glm::scale(model, glm::vec3(0.1f));
-	//model = glm::translate(model, cubePositions[i]);
-	//model = glm::rotate(model, i * glm::radians(50.0f), glm::vec3(0.5f, 1.0f, 0.0f));
-	model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1.0f, 0.0f, 0.0f));
-
-	//set transformatix matrices uniforms
-	glm::mat4 mv = view * model;
-	glm::mat4 mvp = projection * mv;
-	geometryShader.setMat4("mvp", mvp);
-	geometryShader.setMat4("mv", mv);
-	geometryShader.setMat3("mvNormal", transpose(inverse(glm::mat3(mv))));
-
-	//draw model
-	Loader::models[Loader::CHIYA].Draw(geometryShader);
+	player.Draw(geometryShader, view, projection);
 }
 
 void stencilPass()

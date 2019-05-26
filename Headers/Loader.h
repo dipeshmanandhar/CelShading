@@ -25,12 +25,15 @@ class Loader
 {
 public:
 	// DATA ---------------------------------------------------------------------------------------
+	
+	// All valid model indecies (except for the length, the last enum)
 	static enum modelID
 	{
 		CHIYA,
 		NUM_MODELS
 	};
 	static vector<Model> models;
+	
 	// FUNCTIONS ------------------------------------------------------------------------------------
 
 	static void loadModels()
@@ -241,6 +244,6 @@ private:
 	}
 };
 
-vector<Model> Loader::models = vector<Model>(NUM_MODELS);;
+vector<Model> Loader::models = vector<Model>(NUM_MODELS);
 
 #endif // !LOADER_H
