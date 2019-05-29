@@ -37,7 +37,7 @@
 #include "../Headers/Entity.h"
 
 using namespace std;
-using namespace Renderer;
+//using namespace Renderer;
 
 // compile-time constants
 #define PI 3.14159265358979323846f
@@ -51,7 +51,7 @@ using namespace Renderer;
 GLFWwindow* window = NULL;
 
 // Camera variables
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Renderer::Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCREEN_WIDTH / 2.0f;
 float lastY = SCREEN_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -69,7 +69,7 @@ unsigned int gBuffer;
 	// Textures
 unsigned int gPosition, gNormal, gColorSpec, cubemapTexture;
 	// Shaders
-Shader geometryShader, lampShader, skyboxShader, lightVolumeShader, stencilShader;
+Renderer::Shader geometryShader, lampShader, skyboxShader, lightVolumeShader, stencilShader;
 	// Transformation Matrices
 glm::mat4 view, projection;
 	// VBOs
@@ -94,7 +94,7 @@ float pointLightColors[] = {
 float lightVolumeRadius;
 unsigned int numSpherePoints;
 	// Text
-TextRenderer textRenderer;
+Renderer::TextRenderer textRenderer;
 
 // Functions ---------------------------------------------------------------------------------------------
 
@@ -123,17 +123,17 @@ void processInput(GLFWwindow* window)
 	//	glPolygonMode(GL_FRONT_AND_BACK, GL_POINTS);
 
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.processKeyboard(FORWARD, deltaTime);
+		camera.processKeyboard(Renderer::FORWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.processKeyboard(BACKWARD, deltaTime);
+		camera.processKeyboard(Renderer::BACKWARD, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.processKeyboard(LEFT, deltaTime);
+		camera.processKeyboard(Renderer::LEFT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.processKeyboard(RIGHT, deltaTime);
+		camera.processKeyboard(Renderer::RIGHT, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		camera.processKeyboard(UP, deltaTime);
+		camera.processKeyboard(Renderer::UP, deltaTime);
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		camera.processKeyboard(DOWN, deltaTime);
+		camera.processKeyboard(Renderer::DOWN, deltaTime);
 }
 // glfw: whenever the mouse moves, this callback is called
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
@@ -514,7 +514,7 @@ void initializeSkybox()
 	for (unsigned int i = 0; i < faces.size(); i++)
 		faces[i] = "Resources/CubeMaps/skybox/" + faces[i];
 
-	cubemapTexture = Loader::loadCubemap(faces);
+	cubemapTexture = Renderer::Loader::loadCubemap(faces);
 }
 
 void initializeTextRenderer()
@@ -527,7 +527,7 @@ void initialize()
 	initializeShaders();
 	
 	//nanosuit.initialize("Resources/Models/Chiya/Test.fbx");
-	Loader::loadModels();
+	Renderer::Loader::loadModels();
 
 	initializeVAOs();
 	initializeGBuffer();
