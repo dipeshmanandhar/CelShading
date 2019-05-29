@@ -7,11 +7,15 @@
 #include <glad/glad.h> // NOTE: always include GLAD before GLFW
 #include <GLFW/glfw3.h>
 
+/*
 #ifndef STB_IMAGE_IMPLEMENTATION
 //External Library For loading images (STB)
 #define STB_IMAGE_IMPLEMENTATION
 #include "../Headers/stb_image.h"
 #endif // !STB_IMAGE_IMPLEMENTATION
+*/
+
+//#include "../Headers/Renderer.h"
 
 //External Library for Matrix Math (GLM)
 #include <glm/glm.hpp>
@@ -31,6 +35,7 @@
 #include "../Headers/Screen.h"
 #include "../Headers/Loader.h"
 #include "../Headers/Entity.h"
+//#include <FrontEnd.h>
 
 using namespace std;
 
@@ -90,10 +95,14 @@ float lightVolumeRadius;
 unsigned int numSpherePoints;
 	// Text
 TextRenderer textRenderer;
-	// Entities
-Entity player;
 
 // Functions ---------------------------------------------------------------------------------------------
+
+// forward-declared game engine client functions (defined in another .cpp file)
+
+void setup();
+void update(float dTime);
+void render();
 
 // method called every time screen is resized
 void framebuffer_size_callback(GLFWwindow* window, int width, int height)
@@ -517,12 +526,17 @@ void initialize()
 	
 	//nanosuit.initialize("Resources/Models/Chiya/Test.fbx");
 	Loader::loadModels();
-	player.setModel(Loader::CHIYA);
 
 	initializeVAOs();
 	initializeGBuffer();
 	initializeSkybox();
 	initializeTextRenderer();
+
+	Entity::initialize(geometryShader, view, projection);
+
+	//player.setModel(Loader::CHIYA);
+
+	setup();
 }
 
 void sendConstantUniforms()
@@ -615,7 +629,7 @@ void geometryPass()
 	//draw scene
 	geometryShader.use();
 
-	player.Draw(geometryShader, view, projection);
+	render();
 }
 
 void stencilPass()
@@ -909,6 +923,8 @@ int main()
 
 		// input
 		processInput(window);
+
+		update(deltaTime);
 
 		setTransformationMatrices();
 

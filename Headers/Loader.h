@@ -3,6 +3,12 @@
 #ifndef LOADER_H
 #define LOADER_H
 
+//#ifndef STB_IMAGE_IMPLEMENTATION
+//External Library For loading images (STB)
+//#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+//#endif // !STB_IMAGE_IMPLEMENTATION
+
 //External Libraries for OpenGL (GLFW and GLAD)
 #include <glad/glad.h> // NOTE: always include GLAD before GLFW
 #include <GLFW/glfw3.h>
@@ -27,19 +33,26 @@ public:
 	// DATA ---------------------------------------------------------------------------------------
 	
 	// All valid model indecies (except for the length, the last enum)
-	static enum modelID
+	enum modelID
 	{
 		CHIYA,
 		NUM_MODELS
 	};
-	static vector<Model> models;
+
+	static vector<Model>& models()
+	{
+		static vector<Model> models(NUM_MODELS);
+		return models;
+	}
+
+	//static vector<Model> models;
 	
 	// FUNCTIONS ------------------------------------------------------------------------------------
 
 	static void loadModels()
 	{
 		//models = vector<Model>(NUM_MODELS, Model());
-		loadModel(models[CHIYA], "Resources/Models/Chiya/Test.fbx");
+		loadModel(models()[CHIYA], "Resources/Models/Chiya/Test.fbx");
 	}
 
 	static unsigned int TextureFromFile(char const* p, string dir)
@@ -244,6 +257,6 @@ private:
 	}
 };
 
-vector<Model> Loader::models = vector<Model>(NUM_MODELS);
+//vector<Model> Loader::models = vector<Model>(NUM_MODELS);
 
 #endif // !LOADER_H

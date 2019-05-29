@@ -24,47 +24,44 @@ class Entity
 public:
 	/* Constructor */
 	
-	Entity()
-	{
-		//do nothing
-		model = NULL;
-		position = glm::vec3(0.0f);
-		yaw = 0.0f;
-		pitch = -90.0f;
-	}
+	Entity();
 	
-	Entity(Loader::modelID id) : Entity()
-	{
-		setModel(id);
-	}
+	Entity(Loader::modelID id);
 	
 	/*  Functions   */
 	
-	void setModel(Loader::modelID id)
-	{
-		model = &Loader::models[id];
-	}
+	void setModel(Loader::modelID id);
 
-	void Draw(Shader& shader, glm::mat4& view, glm::mat4& projection)
-	{
-		glm::mat4 modelMatrix(1.0f);
-		modelMatrix = glm::translate(modelMatrix, position);
-		modelMatrix = glm::rotate(modelMatrix, glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-		modelMatrix = glm::rotate(modelMatrix, glm::radians(yaw), glm::vec3(0.0f, 1.0f, 0.0f));
+	static void initialize(Shader& s, glm::mat4& v, glm::mat4& p);
 
-		glm::mat4 mv = view * modelMatrix;
-		shader.setMat4("mv", mv);
-		shader.setMat4("mvp", projection * mv);
-		shader.setMat3("mvNormal", transpose(inverse(glm::mat3(mv))));
-		
-		model->Draw(shader);
-	}
+	void Draw() const;
 
 private:
 	/*  Data  */
 	Model* model;
 	glm::vec3 position; //in world space
 	float yaw, pitch; //in degrees
+
+	static Shader*& shader()
+	{
+		static Shader* shader = NULL;
+		return shader;
+	}
+	static glm::mat4*& view()
+	{
+		static glm::mat4* view = NULL;
+		return view;
+	}
+	static glm::mat4*& projection()
+	{
+		static glm::mat4* projection = NULL;
+		return projection;
+	}
+	/*
+	static Shader* shader;
+	static glm::mat4* view;
+	static glm::mat4* projection;
+	*/
 };
 
 #endif // !ENTITY_H
