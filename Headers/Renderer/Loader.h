@@ -27,41 +27,44 @@
 
 using namespace std;
 
-class Loader
+namespace Renderer
 {
-public:
-	// DATA ---------------------------------------------------------------------------------------
-	
-	// All valid model indecies (except for the length, the last enum)
-	enum modelID
+	class Loader
 	{
-		CHIYA,
-		NUM_MODELS
+	public:
+		// DATA ---------------------------------------------------------------------------------------
+
+		// All valid model indecies (except for the length, the last enum)
+		enum modelID
+		{
+			CHIYA,
+			NUM_MODELS
+		};
+
+		static vector<Model>& models();
+
+		//static vector<Model> models;
+
+		// FUNCTIONS ------------------------------------------------------------------------------------
+
+		static void loadModels();
+
+		static unsigned int TextureFromFile(char const* p, string dir);
+
+		// method to load cubemaps (for skybox)
+		static unsigned int loadCubemap(vector<std::string> faces);
+
+	private:
+		static void loadModel(Model& model, const string& path);
+
+		static void processNode(Model& model, aiNode* node, const aiScene* scene);
+
+		static Mesh processMesh(Model& model, aiMesh* mesh, const aiScene* scene);
+
+		static vector<Texture> loadMaterialTextures(Model& model, aiMaterial* mat, aiTextureType type, const string& typeName);
 	};
 
-	static vector<Model>& models();
-
-	//static vector<Model> models;
-	
-	// FUNCTIONS ------------------------------------------------------------------------------------
-
-	static void loadModels();
-
-	static unsigned int TextureFromFile(char const* p, string dir);
-	
-	// method to load cubemaps (for skybox)
-	static unsigned int loadCubemap(vector<std::string> faces);
-
-private:
-	static void loadModel(Model& model, const string& path);
-
-	static void processNode(Model& model, aiNode* node, const aiScene* scene);
-
-	static Mesh processMesh(Model& model, aiMesh* mesh, const aiScene* scene);
-
-	static vector<Texture> loadMaterialTextures(Model& model, aiMaterial* mat, aiTextureType type, const string& typeName);
-};
-
-//vector<Model> Loader::models = vector<Model>(NUM_MODELS);
+	//vector<Model> Loader::models = vector<Model>(NUM_MODELS);
+}
 
 #endif // !LOADER_H

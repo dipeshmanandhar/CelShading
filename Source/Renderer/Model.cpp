@@ -6,13 +6,13 @@
 //public:
 /* Constructor */
 
-Model::Model()
+Renderer::Model::Model()
 {
 	//do nothing
 }
 
 /*
-Model(const char* path)
+Renderer::Model::Model(const char* path)
 {
 	initialize(path);
 }
@@ -23,13 +23,13 @@ Model(const char* path)
 //TODO: implement destructor (need to deallocate glTextures)
 
 /*
-void Model::initialize(const char* path)
+void Renderer::Model::initialize(const char* path)
 {
 	loadModel(path);
 }
 */
 
-void Model::Draw(const Shader& shader) const
+void Renderer::Model::Draw(const Shader& shader) const
 {
 	for (unsigned int i = 0; i < meshes.size(); i++)
 		meshes[i].Draw(shader);

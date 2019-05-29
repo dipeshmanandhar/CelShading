@@ -7,19 +7,19 @@
 	
 /* Constructors */
 
-TextRenderer::TextRenderer()
+Renderer::TextRenderer::TextRenderer()
 {
 	//do nothing
 	VAO = VBO = 0;
 	bitmapFont = 0;
 }
 
-TextRenderer::TextRenderer(const char* bitmapFontFile) : TextRenderer()
+Renderer::TextRenderer::TextRenderer(const char* bitmapFontFile) : TextRenderer()
 {
 	initialize(bitmapFontFile);
 }
 
-TextRenderer::~TextRenderer()
+Renderer::TextRenderer::~TextRenderer()
 {
 	glDeleteVertexArrays(1, &VAO);
 	glDeleteBuffers(1, &VBO);
@@ -28,7 +28,7 @@ TextRenderer::~TextRenderer()
 
 /*  Functions  */
 
-void TextRenderer::initialize(const char* bitmapFontFile)
+void Renderer::TextRenderer::initialize(const char* bitmapFontFile)
 {
 	stbi_set_flip_vertically_on_load(true);
 	bitmapFont = Loader::TextureFromFile(bitmapFontFile, "Resources/Fonts");
@@ -42,7 +42,7 @@ void TextRenderer::initialize(const char* bitmapFontFile)
 
 // (xPos, yPos) is the NDC top left corner of the text to be rendered (default value = top left corner of NDC screen)
 // width and height are the respective dimension sizes to use per character
-void TextRenderer::Draw(const char* text, float xpos, float ypos, float width, float height) const
+void Renderer::TextRenderer::Draw(const char* text, float xpos, float ypos, float width, float height) const
 {
 	//const unsigned int numVertices = text.length() * 24; // 2 triangles per character, 3 points per triangle,  4 floats (2 for position, 2 for texel) per point
 	vector<float> vertices;

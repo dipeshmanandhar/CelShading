@@ -7,7 +7,7 @@
 
 /*  Functions  */
 
-Mesh::Mesh(const vector<Vertex>& v, const vector<unsigned int>& i, const vector<Texture>& t)
+Renderer::Mesh::Mesh(const vector<Vertex>& v, const vector<unsigned int>& i, const vector<Texture>& t)
 {
 	VAO = VBO = EBO = 0;
 	vertices = v;
@@ -16,7 +16,7 @@ Mesh::Mesh(const vector<Vertex>& v, const vector<unsigned int>& i, const vector<
 
 	setupMesh();
 }
-void Mesh::Draw(const Shader& shader) const
+void Renderer::Mesh::Draw(const Shader& shader) const
 {
 	unsigned int diffuseNr = 1;
 	unsigned int specularNr = 1;
@@ -56,7 +56,7 @@ unsigned int VAO, VBO, EBO;
 
 /*  Functions    */
 
-void Mesh::setupMesh()
+void Renderer::Mesh::setupMesh()
 {
 	glGenVertexArrays(1, &VAO);
 	glGenBuffers(1, &VBO);

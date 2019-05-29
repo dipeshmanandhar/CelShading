@@ -17,40 +17,43 @@
 
 using namespace std;
 
-class Model
+namespace Renderer
 {
-public:
-	/* Constructor */
-	Model();
-
-	/*
-	Model(const char* path)
+	class Model
 	{
-		initialize(path);
-	}
-	*/
+	public:
+		/* Constructor */
+		Model();
 
-	/*  Functions   */
-	
-	//TODO: implement destructor (need to deallocate glTextures)
-	
-	/*
-	void initialize(const char* path)
-	{
-		loadModel(path);
-	}
-	*/
+		/*
+		Model(const char* path)
+		{
+			initialize(path);
+		}
+		*/
 
-	void Draw(const Shader& shader) const;
+		/*  Functions   */
 
-private:
-	/*  Model Data  */
+		//TODO: implement destructor (need to deallocate glTextures)
 
-	vector<Mesh> meshes;
-	string directory;
-	vector<Texture> textures_loaded;
-	friend class Loader;
-};
+		/*
+		void initialize(const char* path)
+		{
+			loadModel(path);
+		}
+		*/
+
+		void Draw(const Shader& shader) const;
+
+	private:
+		/*  Model Data  */
+
+		vector<Mesh> meshes;
+		string directory;
+		vector<Texture> textures_loaded;
+		friend class Loader;
+	};
+}
 
 #endif // !MODEL_H
 

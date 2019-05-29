@@ -1,22 +1,9 @@
 //Dipesh Manandhar 5/27/2019
 
-//External Library for Matrix Math (GLM)
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/type_ptr.hpp>
-
-//C++ Libraries
-//#include <string>
-//#include <vector>
-
 //Created H Files
 #include "../Headers/Entity.h"
-#include "../../Headers/Renderer/Model.h"
-#include "../../Headers/Renderer/Loader.h"
-#include "../../Headers/Renderer/Shader.h"
 
-//using namespace std;
-
+//public:
 /* Constructor */
 
 Entity::Entity()
@@ -30,19 +17,19 @@ Entity::Entity()
 	view() = projection() = NULL;
 }
 
-Entity::Entity(Loader::modelID id) : Entity()
+Entity::Entity(Renderer::Loader::modelID id) : Entity()
 {
 	setModel(id);
 }
 
 /*  Functions   */
 
-void Entity::setModel(Loader::modelID id)
+void Entity::setModel(Renderer::Loader::modelID id)
 {
-	model = &Loader::models()[id];
+	model = &Renderer::Loader::models()[id];
 }
 
-void Entity::initialize(Shader& s, glm::mat4& v, glm::mat4& p)
+void Entity::initialize(Renderer::Shader& s, glm::mat4& v, glm::mat4& p)
 {
 	shader() = &s;
 	view() = &v;
@@ -62,4 +49,21 @@ void Entity::Draw() const
 	shader()->setMat3("mvNormal", transpose(inverse(glm::mat3(mv))));
 
 	model->Draw(*shader());
+}
+
+//private:
+Renderer::Shader*& Entity::shader()
+{
+	static Renderer::Shader* shader = NULL;
+	return shader;
+}
+glm::mat4*& Entity::view()
+{
+	static glm::mat4* view = NULL;
+	return view;
+}
+glm::mat4*& Entity::projection()
+{
+	static glm::mat4* projection = NULL;
+	return projection;
 }

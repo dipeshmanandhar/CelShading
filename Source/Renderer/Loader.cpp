@@ -6,7 +6,7 @@
 //public:
 // DATA ---------------------------------------------------------------------------------------
 	
-vector<Model>& Loader::models()
+vector<Renderer::Model>& Renderer::Loader::models()
 {
 	static vector<Model> models(Loader::NUM_MODELS);
 	return models;
@@ -16,13 +16,13 @@ vector<Model>& Loader::models()
 	
 // FUNCTIONS ------------------------------------------------------------------------------------
 
-void Loader::loadModels()
+void Renderer::Loader::loadModels()
 {
 	//models = vector<Model>(NUM_MODELS, Model());
 	loadModel(models()[CHIYA], "Resources/Models/Chiya/Test.fbx");
 }
 
-unsigned int Loader::TextureFromFile(char const* p, string dir)
+unsigned int Renderer::Loader::TextureFromFile(char const* p, string dir)
 {
 	string path = dir + "/" + p;
 
@@ -73,7 +73,7 @@ unsigned int Loader::TextureFromFile(char const* p, string dir)
 }
 	
 // method to load cubemaps (for skybox)
-unsigned int Loader::loadCubemap(vector<std::string> faces)
+unsigned int Renderer::Loader::loadCubemap(vector<std::string> faces)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
@@ -106,7 +106,7 @@ unsigned int Loader::loadCubemap(vector<std::string> faces)
 }
 
 //private:
-void Loader::loadModel(Model& model, const string& path)
+void Renderer::Loader::loadModel(Model& model, const string& path)
 {
 	Assimp::Importer import;
 	const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -121,7 +121,7 @@ void Loader::loadModel(Model& model, const string& path)
 	processNode(model, scene->mRootNode, scene);
 }
 
-void Loader::processNode(Model& model, aiNode* node, const aiScene* scene)
+void Renderer::Loader::processNode(Model& model, aiNode* node, const aiScene* scene)
 {
 	// process all the node's meshes (if any)
 	for (unsigned int i = 0; i < node->mNumMeshes; i++)
@@ -136,7 +136,7 @@ void Loader::processNode(Model& model, aiNode* node, const aiScene* scene)
 	}
 }
 
-Mesh Loader::processMesh(Model& model, aiMesh* mesh, const aiScene* scene)
+Renderer::Mesh Renderer::Loader::processMesh(Model& model, aiMesh* mesh, const aiScene* scene)
 {
 	vector<Vertex> vertices;
 	vector<unsigned int> indices;
@@ -193,7 +193,7 @@ Mesh Loader::processMesh(Model& model, aiMesh* mesh, const aiScene* scene)
 	return Mesh(vertices, indices, textures);
 }
 
-vector<Texture> Loader::loadMaterialTextures(Model& model, aiMaterial * mat, aiTextureType type, const string & typeName)
+vector<Renderer::Texture> Renderer::Loader::loadMaterialTextures(Model& model, aiMaterial * mat, aiTextureType type, const string & typeName)
 {
 	vector<Texture> textures;
 	for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)

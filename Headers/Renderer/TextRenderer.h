@@ -18,40 +18,42 @@
 
 using namespace std;
 
-class TextRenderer {
-public:
-	/*  TextRenderer Data  */
-	
-	/* Constructors */
-	
-	TextRenderer();
+namespace Renderer
+{
+	class TextRenderer {
+	public:
+		/*  TextRenderer Data  */
 
-	TextRenderer(const char* bitmapFontFile);
+		/* Constructors */
 
-	~TextRenderer();
+		TextRenderer();
 
-	/*  Functions  */
-	
-	void initialize(const char* bitmapFontFile);
+		TextRenderer(const char* bitmapFontFile);
 
-	// (xPos, yPos) is the NDC top left corner of the text to be rendered (default value = top left corner of NDC screen)
-	// width and height are the respective dimension sizes to use per character
-	void Draw(const char* text, float xpos = -1.0f, float ypos = 1.0f, float width = 50.0f / SCREEN_WIDTH, float height = 50.0f / SCREEN_HEIGHT) const;
+		~TextRenderer();
 
-private:
-	/*  Render data  */
-	
-	unsigned int bitmapFont, VAO, VBO;
-	Shader shader;
-	const unsigned int horizontalChars = 16;
-	const unsigned int verticalChars = 16;
-	const float texelCellWidth = 1.0f / horizontalChars;
-	const float texelCellHeight = 1.0f / verticalChars;
-	
-	/*  Functions    */
-	
-};
+		/*  Functions  */
 
+		void initialize(const char* bitmapFontFile);
+
+		// (xPos, yPos) is the NDC top left corner of the text to be rendered (default value = top left corner of NDC screen)
+		// width and height are the respective dimension sizes to use per character
+		void Draw(const char* text, float xpos = -1.0f, float ypos = 1.0f, float width = 50.0f / SCREEN_WIDTH, float height = 50.0f / SCREEN_HEIGHT) const;
+
+	private:
+		/*  Render data  */
+
+		unsigned int bitmapFont, VAO, VBO;
+		Shader shader;
+		const unsigned int horizontalChars = 16;
+		const unsigned int verticalChars = 16;
+		const float texelCellWidth = 1.0f / horizontalChars;
+		const float texelCellHeight = 1.0f / verticalChars;
+
+		/*  Functions    */
+
+	};
+}
 
 #endif // !TEXTRENDERER_H
 

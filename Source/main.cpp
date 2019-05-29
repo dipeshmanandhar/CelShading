@@ -37,6 +37,7 @@
 #include "../Headers/Entity.h"
 
 using namespace std;
+using namespace Renderer;
 
 // compile-time constants
 #define PI 3.14159265358979323846f

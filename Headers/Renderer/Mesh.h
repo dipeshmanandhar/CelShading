@@ -21,35 +21,37 @@
 
 using namespace std;
 
-struct Vertex {
-	glm::vec3 Position;
-	glm::vec3 Normal;
-	glm::vec2 TexCoords;
-};
+namespace Renderer
+{
+	struct Vertex {
+		glm::vec3 Position;
+		glm::vec3 Normal;
+		glm::vec2 TexCoords;
+	};
 
-struct Texture {
-	unsigned int id;
-	string type;
-	string path;  // we store the path of the texture to compare with other textures
-};
+	struct Texture {
+		unsigned int id;
+		string type;
+		string path;  // we store the path of the texture to compare with other textures
+	};
 
-class Mesh {
-public:
-	/*  Mesh Data  */
-	vector<Vertex> vertices;
-	vector<unsigned int> indices;
-	vector<Texture> textures;
-	/*  Functions  */
-	Mesh(const vector<Vertex>& v, const vector<unsigned int>& i, const vector<Texture>& t);
+	class Mesh {
+	public:
+		/*  Mesh Data  */
+		vector<Vertex> vertices;
+		vector<unsigned int> indices;
+		vector<Texture> textures;
+		/*  Functions  */
+		Mesh(const vector<Vertex>& v, const vector<unsigned int>& i, const vector<Texture>& t);
 
-	void Draw(const Shader& shader) const;
-private:
-	/*  Render data  */
-	unsigned int VAO, VBO, EBO;
-	/*  Functions    */
-	void setupMesh();
-};
-
+		void Draw(const Shader& shader) const;
+	private:
+		/*  Render data  */
+		unsigned int VAO, VBO, EBO;
+		/*  Functions    */
+		void setupMesh();
+	};
+}
 
 #endif // !MESH_H
 

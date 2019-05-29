@@ -16,7 +16,7 @@ Entity player;
 void setup()
 {
 	cout << "Setting Up..." << endl;
-	player.setModel(Loader::CHIYA);
+	player.setModel(Renderer::Loader::CHIYA);
 }
 
 void update(float dTime)

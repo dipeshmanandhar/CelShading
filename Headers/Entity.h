@@ -26,39 +26,28 @@ public:
 	
 	Entity();
 	
-	Entity(Loader::modelID id);
+	Entity(Renderer::Loader::modelID id);
 	
 	/*  Functions   */
 	
-	void setModel(Loader::modelID id);
+	void setModel(Renderer::Loader::modelID id);
 
-	static void initialize(Shader& s, glm::mat4& v, glm::mat4& p);
+	static void initialize(Renderer::Shader& s, glm::mat4& v, glm::mat4& p);
 
 	void Draw() const;
 
 private:
 	/*  Data  */
-	Model* model;
+	Renderer::Model* model;
 	glm::vec3 position; //in world space
 	float yaw, pitch; //in degrees
 
-	static Shader*& shader()
-	{
-		static Shader* shader = NULL;
-		return shader;
-	}
-	static glm::mat4*& view()
-	{
-		static glm::mat4* view = NULL;
-		return view;
-	}
-	static glm::mat4*& projection()
-	{
-		static glm::mat4* projection = NULL;
-		return projection;
-	}
+	static Renderer::Shader*& shader();
+	static glm::mat4*& view();
+	static glm::mat4*& projection();
+
 	/*
-	static Shader* shader;
+	static Renderer::Shader* shader;
 	static glm::mat4* view;
 	static glm::mat4* projection;
 	*/
