@@ -127,16 +127,16 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="Headers\Camera.h" />
     <ClInclude Include="Headers\Entity.h" />
-    <ClInclude Include="Headers\Loader.h" />
-    <ClInclude Include="Headers\Mesh.h" />
-    <ClInclude Include="Headers\Model.h" />
-    <ClInclude Include="Headers\Renderer.h" />
-    <ClInclude Include="Headers\Screen.h" />
-    <ClInclude Include="Headers\Shader.h" />
-    <ClInclude Include="Headers\stb_image.h" />
-    <ClInclude Include="Headers\TextRenderer.h" />
+    <ClInclude Include="Headers\Renderer\Camera.h" />
+    <ClInclude Include="Headers\Renderer\Loader.h" />
+    <ClInclude Include="Headers\Renderer\Mesh.h" />
+    <ClInclude Include="Headers\Renderer\Model.h" />
+    <ClInclude Include="Headers\Renderer\Renderer.h" />
+    <ClInclude Include="Headers\Renderer\Screen.h" />
+    <ClInclude Include="Headers\Renderer\Shader.h" />
+    <ClInclude Include="Headers\Renderer\stb_image.h" />
+    <ClInclude Include="Headers\Renderer\TextRenderer.h" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\BorderShader.frag" />
@@ -165,7 +165,13 @@
     <ClCompile Include="Source\Entity.cpp" />
     <ClCompile Include="Source\gameLogic.cpp" />
     <ClCompile Include="Source\main.cpp" />
-    <ClCompile Include="Source\stb_image.cpp" />
+    <ClCompile Include="Source\Renderer\Camera.cpp" />
+    <ClCompile Include="Source\Renderer\Loader.cpp" />
+    <ClCompile Include="Source\Renderer\Mesh.cpp" />
+    <ClCompile Include="Source\Renderer\Model.cpp" />
+    <ClCompile Include="Source\Renderer\Shader.cpp" />
+    <ClCompile Include="Source\Renderer\stb_image.cpp" />
+    <ClCompile Include="Source\Renderer\TextRenderer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

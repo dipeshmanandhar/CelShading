@@ -13,9 +13,9 @@
 //#include <vector>
 
 //Created H Files
-#include "Model.h"
-#include "Loader.h"
-#include "Shader.h"
+#include "Renderer/Model.h"
+#include "Renderer/Loader.h"
+#include "Renderer/Shader.h"
 
 //using namespace std;
 

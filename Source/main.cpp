@@ -27,15 +27,14 @@
 #include <string> // use of to_str() requires C++11
 
 //Created H Files
-#include "../Headers/Shader.h"
-#include "../Headers/Camera.h"
-//#include "../Headers/Mesh.h"
-#include "../Headers/Model.h"
-#include "../Headers/TextRenderer.h"
-#include "../Headers/Screen.h"
-#include "../Headers/Loader.h"
+#include "../Headers/Renderer/Shader.h"
+#include "../Headers/Renderer/Camera.h"
+//#include "../Headers/Renderer/Mesh.h"
+#include "../Headers/Renderer/Model.h"
+#include "../Headers/Renderer/TextRenderer.h"
+#include "../Headers/Renderer/Screen.h"
+#include "../Headers/Renderer/Loader.h"
 #include "../Headers/Entity.h"
-//#include <FrontEnd.h>
 
 using namespace std;
 
@@ -138,25 +137,27 @@ void processInput(GLFWwindow* window)
 // glfw: whenever the mouse moves, this callback is called
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
+	float xposf = (float)xpos;
+	float yposf = (float)ypos;
 	if (firstMouse)
 	{
-		lastX = xpos;
-		lastY = ypos;
+		lastX = xposf;
+		lastY = yposf;
 		firstMouse = false;
 	}
 
-	float xoffset = xpos - lastX;
-	float yoffset = lastY - ypos; // reversed since y-coordinates go from bottom to top
+	float xoffset = xposf - lastX;
+	float yoffset = lastY - yposf; // reversed since y-coordinates go from bottom to top
 
-	lastX = xpos;
-	lastY = ypos;
+	lastX = xposf;
+	lastY = yposf;
 
 	camera.processMouseMovement(xoffset, yoffset);
 }
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 {
-	camera.processMouseScroll(yoffset);
+	camera.processMouseScroll((float)yoffset);
 }
 
 /*
@@ -509,7 +510,7 @@ void initializeSkybox()
 		"back.jpg"
 	};
 
-	for (int i = 0; i < faces.size(); i++)
+	for (unsigned int i = 0; i < faces.size(); i++)
 		faces[i] = "Resources/CubeMaps/skybox/" + faces[i];
 
 	cubemapTexture = Loader::loadCubemap(faces);
@@ -909,7 +910,7 @@ int main()
 	while (!glfwWindowShouldClose(window))
 	{
 		// per-frame time logic
-		float currentFrame = glfwGetTime();
+		float currentFrame = (float)glfwGetTime();
 		deltaTime = currentFrame - lastFrame;
 		lastFrame = currentFrame;
 		accumulator += deltaTime;

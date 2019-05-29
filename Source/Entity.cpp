@@ -11,9 +11,9 @@
 
 //Created H Files
 #include "../Headers/Entity.h"
-#include "../Headers/Model.h"
-#include "../Headers/Loader.h"
-#include "../Headers/Shader.h"
+#include "../../Headers/Renderer/Model.h"
+#include "../../Headers/Renderer/Loader.h"
+#include "../../Headers/Renderer/Shader.h"
 
 //using namespace std;
 
