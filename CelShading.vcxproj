@@ -137,20 +137,13 @@
     <ClInclude Include="Headers\Renderer\Shader.h" />
     <ClInclude Include="Headers\Renderer\stb_image.h" />
     <ClInclude Include="Headers\Renderer\TextRenderer.h" />
+    <ClInclude Include="Headers\RenderingOptions.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Resources\Shaders\BorderShader.frag" />
-    <None Include="Resources\Shaders\BorderShader.vert" />
-    <None Include="Resources\Shaders\FinalPassShader.frag" />
-    <None Include="Resources\Shaders\FinalPassShader.vert" />
     <None Include="Resources\Shaders\GeometryShader.frag" />
     <None Include="Resources\Shaders\GeometryShader.vert" />
     <None Include="Resources\Shaders\LampShader.frag" />
     <None Include="Resources\Shaders\LampShader.vert" />
-    <None Include="Resources\Shaders\LightingPassShader.frag" />
-    <None Include="Resources\Shaders\LightingPassShader.vert" />
-    <None Include="Resources\Shaders\LightingShader.frag" />
-    <None Include="Resources\Shaders\LightingShader.vert" />
     <None Include="Resources\Shaders\LightVolumeShader.frag" />
     <None Include="Resources\Shaders\LightVolumeShader.vert" />
     <None Include="Resources\Shaders\SkyboxShader.frag" />

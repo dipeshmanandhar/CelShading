@@ -3,6 +3,7 @@
 #ifndef MAIN_CPP
 #define MAIN_CPP
 
+
 //External Libraries for OpenGL (GLFW and GLAD)
 #include <glad/glad.h> // NOTE: always include GLAD before GLFW
 #include <GLFW/glfw3.h>
@@ -35,6 +36,7 @@
 #include "../Headers/Renderer/Screen.h"
 #include "../Headers/Renderer/Loader.h"
 #include "../Headers/Entity.h"
+#include "../Headers/RenderingOptions.h"
 
 using namespace std;
 //using namespace Renderer;
@@ -51,7 +53,6 @@ using namespace std;
 GLFWwindow* window = NULL;
 
 // Camera variables
-Renderer::Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = SCREEN_WIDTH / 2.0f;
 float lastY = SCREEN_HEIGHT / 2.0f;
 bool firstMouse = true;
@@ -79,22 +80,8 @@ unsigned int sphereEBO;
 	// VAOs
 unsigned int lampVAO, skyboxVAO, screenVAO, sphereVAO;
 	// point lights
-glm::vec3 pointLightPositions[] = {
-	glm::vec3(1.0f,  2.0f,  0.0f),
-	glm::vec3(-0.5f, 1.0f, 1.0f)
-	//glm::vec3(-4.0f,  2.0f, -12.0f),
-	//glm::vec3(0.0f,  0.0f, -3.0f)
-};
-const unsigned int NUM_POINT_LIGHTS = sizeof(pointLightPositions) / sizeof(pointLightPositions[0]);
-float pointLightColors[] = {
-	//R	    G    B
-	0.0f, 0.0f, 100.0f,
-	1.0f, 0.0f, 0.0f
-};
 float lightVolumeRadius;
 unsigned int numSpherePoints;
-	// Text
-Renderer::TextRenderer textRenderer;
 
 // Functions ---------------------------------------------------------------------------------------------
 
@@ -161,18 +148,6 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 	camera.processMouseScroll((float)yoffset);
 }
 
-/*
-//TODO: implement rendering in such methods
-void drawScene()
-{
-	//draw model
-}
-void drawLights()
-{
-	
-}
-*/
-
 int initializeOpenGL()
 {
 	//Initialize GLFW
@@ -219,7 +194,6 @@ int initializeOpenGL()
 void initializeShaders()
 {
 	geometryShader.initialize("Resources/Shaders/GeometryShader.vert", "Resources/Shaders/GeometryShader.frag");
-	//borderShader.initialize("Resources/Shaders/BorderShader.vert", "Resources/Shaders/BorderShader.frag");
 	lampShader.initialize("Resources/Shaders/LampShader.vert", "Resources/Shaders/LampShader.frag");
 	skyboxShader.initialize("Resources/Shaders/SkyboxShader.vert", "Resources/Shaders/SkyboxShader.frag");
 	lightVolumeShader.initialize("Resources/Shaders/LightVolumeShader.vert", "Resources/Shaders/LightVolumeShader.frag");
@@ -503,42 +477,40 @@ void initializeSkybox()
 	//load Skybox
 	vector<string> faces
 	{
-		"right.jpg",
-		"left.jpg",
-		"top.jpg",
-		"bottom.jpg",
-		"front.jpg",
-		"back.jpg"
+		"right." + skyboxFiletype,
+		"left." + skyboxFiletype,
+		"top." + skyboxFiletype,
+		"bottom." + skyboxFiletype,
+		"front." + skyboxFiletype,
+		"back." + skyboxFiletype
 	};
 
 	for (unsigned int i = 0; i < faces.size(); i++)
-		faces[i] = "Resources/CubeMaps/skybox/" + faces[i];
+		faces[i] = skyboxFilename + faces[i];
 
 	cubemapTexture = Renderer::Loader::loadCubemap(faces);
 }
 
 void initializeTextRenderer()
 {
-	textRenderer.initialize("font1.png");
+	Renderer::TextRenderer::initialize("font1.png");
 }
 
 void initialize()
 {
 	initializeShaders();
 	
-	//nanosuit.initialize("Resources/Models/Chiya/Test.fbx");
 	Renderer::Loader::loadModels();
+
+	Entity::initialize(geometryShader, view, projection);
+
+	initializeTextRenderer();
+
+	setup();
 
 	initializeVAOs();
 	initializeGBuffer();
 	initializeSkybox();
-	initializeTextRenderer();
-
-	Entity::initialize(geometryShader, view, projection);
-
-	//player.setModel(Loader::CHIYA);
-
-	setup();
 }
 
 void sendConstantUniforms()
@@ -550,10 +522,7 @@ void sendConstantUniforms()
 
 	//set light attributes
 	// Directional Light
-	//lightVolumeShader.setVec3("dirLight.ambient", 0.2f, 0.2f, 0.2f);
-	//lightVolumeShader.setVec3("dirLight.diffuse", 0.5f, 0.5f, 0.5f); // darken the light a bit to fit the scene
-	//lightVolumeShader.setVec3("dirLight.specular", 1.0f, 1.0f, 1.0f);
-	lightVolumeShader.setVec3("dirLight.Color", 1.0f, 1.0f, 1.0f); // darken the light a bit to fit the scene
+	lightVolumeShader.setVec3("dirLight.Color", dirLightColor); // darken the light a bit to fit the scene
 
 	//Point Lights
 	//light coverage distance at 13 (pixels ?)
@@ -565,9 +534,9 @@ void sendConstantUniforms()
 	float threshold = 0.15f; //should be 0.25f ? (calculated as 1 / (numShades + 1) )
 	lightVolumeRadius = (-linear + sqrt(linear * linear - 4 * quadratic * (constant - lightMax / threshold))) / (2 * quadratic);
 
-	cout << "Light Volume Radius: " << lightVolumeRadius << endl;
+	//cout << "Light Volume Radius: " << lightVolumeRadius << endl;
 
-	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+	for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
 		//lightVolumeShader.setVec3("pointLights[" + to_string(i) + "].ambient", 0.2f, 0.2f, 0.2f);
 		lightVolumeShader.setVec3("pointLights[" + to_string(i) + "].Color", pointLightColors[3 * i], pointLightColors[3 * i + 1], pointLightColors[3 * i + 2]); // darken the light a bit to fit the scene
@@ -661,7 +630,7 @@ void stencilPass()
 	stencilShader.use();
 
 	glBindVertexArray(sphereVAO);
-	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+	for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
 		//set mvp matrix
 		glm::mat4 model = glm::mat4(1.0f);
@@ -689,10 +658,10 @@ void lightVolumePass()
 
 	//set light position uniforms (they change based on the camera's view matrix)
 	//Directional Light
-	lightVolumeShader.setVec3("dirLight.Direction", glm::vec3(view * glm::vec4(1.0f, -1.0f, -1.0f, 0.0f)));
+	lightVolumeShader.setVec3("dirLight.Direction", glm::vec3(view * glm::vec4(dirLightDirection, 0.0f)));
 	//Point Lights
 	pointLightPositions[0] = glm::vec3(cos(glfwGetTime()), 2.0f, sin(glfwGetTime()));
-	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+	for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
 		lightVolumeShader.setVec3("pointLights[" + to_string(i) + "].Position", glm::vec3(view * glm::vec4(pointLightPositions[i], 1.0f)));
 
 	//send gBuffer textures
@@ -732,7 +701,7 @@ void lightVolumePass()
 	glEnable(GL_CULL_FACE);
 	glCullFace(GL_FRONT);
 	glBindVertexArray(sphereVAO);
-	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+	for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
 		//set mvp matrix
 		glm::mat4 model = glm::mat4(1.0f);
@@ -798,7 +767,7 @@ void drawLamps()
 	//lampShader.setMat4("view", view);
 	//lampShader.setMat4("projection", projection);
 
-	for (int i = 0; i < NUM_POINT_LIGHTS; i++)
+	for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
 	{
 		//set mvp matrix
 		glm::mat4 model = glm::mat4(1.0f);
@@ -852,7 +821,7 @@ void drawText()
 	//glDisable(GL_STENCIL_TEST);
 	glDisable(GL_DEPTH_TEST);
 	glDisable(GL_CULL_FACE);
-	textRenderer.Draw(("FPS: " + to_string(fps)).c_str());
+	Renderer::TextRenderer::Draw(("FPS: " + to_string(fps)).c_str());
 	//glEnable(GL_STENCIL_TEST);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);

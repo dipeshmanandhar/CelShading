@@ -1,12 +1,15 @@
 //Dipesh Manandhar 5/15/2019
 
 //Created H Files
+#include "../../Headers/Renderer/Loader.h"
+#include "../../Headers/Renderer/Shader.h"
 #include "../../Headers/Renderer/TextRenderer.h"
 
 //public:
 	
 /* Constructors */
 
+/*
 Renderer::TextRenderer::TextRenderer()
 {
 	//do nothing
@@ -25,11 +28,15 @@ Renderer::TextRenderer::~TextRenderer()
 	glDeleteBuffers(1, &VBO);
 	glDeleteTextures(1, &bitmapFont);
 }
+*/
 
 /*  Functions  */
 
 void Renderer::TextRenderer::initialize(const char* bitmapFontFile)
 {
+	bitmapFont = 0;
+	VAO = VBO = 0;
+
 	stbi_set_flip_vertically_on_load(true);
 	bitmapFont = Loader::TextureFromFile(bitmapFontFile, "Resources/Fonts");
 	stbi_set_flip_vertically_on_load(false);
@@ -40,9 +47,16 @@ void Renderer::TextRenderer::initialize(const char* bitmapFontFile)
 	shader.initialize("Resources/Shaders/TextShader.vert", "Resources/Shaders/TextShader.frag");
 }
 
+void Renderer::TextRenderer::clean()
+{
+	glDeleteVertexArrays(1, &VAO);
+	glDeleteBuffers(1, &VBO);
+	glDeleteTextures(1, &bitmapFont);
+}
+
 // (xPos, yPos) is the NDC top left corner of the text to be rendered (default value = top left corner of NDC screen)
 // width and height are the respective dimension sizes to use per character
-void Renderer::TextRenderer::Draw(const char* text, float xpos, float ypos, float width, float height) const
+void Renderer::TextRenderer::Draw(const char* text, float xpos, float ypos, float width, float height)
 {
 	//const unsigned int numVertices = text.length() * 24; // 2 triangles per character, 3 points per triangle,  4 floats (2 for position, 2 for texel) per point
 	vector<float> vertices;
@@ -115,3 +129,17 @@ void Renderer::TextRenderer::Draw(const char* text, float xpos, float ypos, floa
 }
 
 
+void Renderer::TextRenderer::setTextColor(glm::vec3 interior, glm::vec3 exterior)
+{
+	shader.use();
+	shader.setVec3("TextColor", interior);
+	shader.setVec3("OutlineColor", exterior);
+}
+
+//private:
+unsigned int Renderer::TextRenderer::bitmapFont, Renderer::TextRenderer::VAO, Renderer::TextRenderer::VBO;
+Renderer::Shader Renderer::TextRenderer::shader;
+const unsigned int Renderer::TextRenderer::horizontalChars = 16;
+const unsigned int Renderer::TextRenderer::verticalChars = 16;
+const float Renderer::TextRenderer::texelCellWidth = 1.0f / horizontalChars;
+const float Renderer::TextRenderer::texelCellHeight = 1.0f / verticalChars;

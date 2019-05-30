@@ -73,7 +73,7 @@ unsigned int Renderer::Loader::TextureFromFile(char const* p, string dir)
 }
 	
 // method to load cubemaps (for skybox)
-unsigned int Renderer::Loader::loadCubemap(vector<std::string> faces)
+unsigned int Renderer::Loader::loadCubemap(vector<std::string>& faces)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);

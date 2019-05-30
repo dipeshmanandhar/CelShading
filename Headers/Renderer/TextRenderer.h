@@ -26,29 +26,35 @@ namespace Renderer
 
 		/* Constructors */
 
+		/*
 		TextRenderer();
 
 		TextRenderer(const char* bitmapFontFile);
 
 		~TextRenderer();
+		*/
 
 		/*  Functions  */
 
-		void initialize(const char* bitmapFontFile);
+		static void initialize(const char* bitmapFontFile);
+
+		static void clean();
 
 		// (xPos, yPos) is the NDC top left corner of the text to be rendered (default value = top left corner of NDC screen)
 		// width and height are the respective dimension sizes to use per character
-		void Draw(const char* text, float xpos = -1.0f, float ypos = 1.0f, float width = 50.0f / SCREEN_WIDTH, float height = 50.0f / SCREEN_HEIGHT) const;
+		static void Draw(const char* text, float xpos = -1.0f, float ypos = 1.0f, float width = 50.0f / SCREEN_WIDTH, float height = 50.0f / SCREEN_HEIGHT);
+
+		static void setTextColor(glm::vec3 interior, glm::vec3 exterior);
 
 	private:
 		/*  Render data  */
 
-		unsigned int bitmapFont, VAO, VBO;
-		Shader shader;
-		const unsigned int horizontalChars = 16;
-		const unsigned int verticalChars = 16;
-		const float texelCellWidth = 1.0f / horizontalChars;
-		const float texelCellHeight = 1.0f / verticalChars;
+		static unsigned int bitmapFont, VAO, VBO;
+		static Shader shader;
+		static const unsigned int horizontalChars;
+		static const unsigned int verticalChars;
+		static const float texelCellWidth;
+		static const float texelCellHeight;
 
 		/*  Functions    */
 

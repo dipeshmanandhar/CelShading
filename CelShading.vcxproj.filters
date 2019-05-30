@@ -54,24 +54,15 @@
     <ClInclude Include="Headers\Renderer\TextRenderer.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\RenderingOptions.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\LampShader.frag">
       <Filter>Resource Files\Shaders</Filter>
     </None>
     <None Include="Resources\Shaders\LampShader.vert">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Resources\Shaders\LightingShader.frag">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Resources\Shaders\LightingShader.vert">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Resources\Shaders\BorderShader.frag">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Resources\Shaders\BorderShader.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
     <None Include="Resources\Shaders\SkyboxShader.frag">
@@ -86,22 +77,10 @@
     <None Include="Resources\Shaders\TextShader.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
-    <None Include="Resources\Shaders\FinalPassShader.frag">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Resources\Shaders\FinalPassShader.vert">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
     <None Include="Resources\Shaders\GeometryShader.frag">
       <Filter>Resource Files\Shaders</Filter>
     </None>
     <None Include="Resources\Shaders\GeometryShader.vert">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Resources\Shaders\LightingPassShader.frag">
-      <Filter>Resource Files\Shaders</Filter>
-    </None>
-    <None Include="Resources\Shaders\LightingPassShader.vert">
       <Filter>Resource Files\Shaders</Filter>
     </None>
     <None Include="Resources\Shaders\LightVolumeShader.frag">

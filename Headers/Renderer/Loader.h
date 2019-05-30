@@ -52,7 +52,7 @@ namespace Renderer
 		static unsigned int TextureFromFile(char const* p, string dir);
 
 		// method to load cubemaps (for skybox)
-		static unsigned int loadCubemap(vector<std::string> faces);
+		static unsigned int loadCubemap(vector<std::string>& faces);
 
 	private:
 		static void loadModel(Model& model, const string& path);
