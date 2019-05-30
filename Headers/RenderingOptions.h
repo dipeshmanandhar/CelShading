@@ -3,13 +3,17 @@
 #ifndef RENDERINGOPTIONS_H
 #define RENDERINGOPTIONS_H
 
-//External Library for Matrix Math (GLM)
+// External Library for Matrix Math (GLM)
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 // C++ Libraries
 #include <vector>
+
+// Project Files
+#include "Renderer/Camera.h"
+#include "Renderer/Terrain.h"
 
 using namespace std;
 
@@ -30,6 +34,9 @@ extern "C" Renderer::Camera camera;
 	// Skybox
 extern "C" const string skyboxFiletype;
 extern "C" const string skyboxFilename;
+
+	// Terrain
+extern "C" Renderer::Terrain terrain;
 
 
 #endif // !RENDERINGOPTIONS_H

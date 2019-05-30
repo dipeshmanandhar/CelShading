@@ -51,6 +51,11 @@ void Entity::Draw() const
 	model->Draw(*shader());
 }
 
+void Entity::setPosition(glm::vec3 pos)
+{
+	position = pos;
+}
+
 //private:
 Renderer::Shader*& Entity::shader()
 {

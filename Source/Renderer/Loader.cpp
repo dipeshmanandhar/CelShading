@@ -71,7 +71,55 @@ unsigned int Renderer::Loader::TextureFromFile(char const* p, string dir)
 
 	return textureID;
 }
-	
+
+unsigned int Renderer::Loader::TextureFromFile(string path)
+{
+	unsigned int textureID;
+	glGenTextures(1, &textureID);
+
+	int width, height, nrComponents;
+	unsigned char* data = stbi_load(path.c_str(), &width, &height, &nrComponents, 0);
+	if (data)
+	{
+		GLenum format1 = GL_RED, format2 = GL_RED;
+		if (nrComponents == 1)
+		{
+			format1 = GL_RED;
+			format2 = GL_RED;
+		}
+		else if (nrComponents == 3)
+		{
+			format1 = GL_SRGB;
+			format2 = GL_RGB;
+		}
+		else if (nrComponents == 4)
+		{
+			format1 = GL_SRGB_ALPHA;
+			format2 = GL_RGBA;
+		}
+		else
+			cout << "ERROR: nrComponents not specified" << endl;
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, format1, width, height, 0, format2, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+		stbi_image_free(data);
+	}
+	else
+	{
+		std::cout << "Texture failed to load at path: " << string(path) << std::endl;
+		stbi_image_free(data);
+	}
+
+	return textureID;
+}
+
 // method to load cubemaps (for skybox)
 unsigned int Renderer::Loader::loadCubemap(vector<std::string>& faces)
 {

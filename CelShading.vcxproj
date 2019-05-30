@@ -136,7 +136,9 @@
     <ClInclude Include="Headers\Renderer\Screen.h" />
     <ClInclude Include="Headers\Renderer\Shader.h" />
     <ClInclude Include="Headers\Renderer\stb_image.h" />
+    <ClInclude Include="Headers\Renderer\Terrain.h" />
     <ClInclude Include="Headers\Renderer\TextRenderer.h" />
+    <ClInclude Include="Headers\Renderer\VertexStructs.h" />
     <ClInclude Include="Headers\RenderingOptions.h" />
   </ItemGroup>
   <ItemGroup>
@@ -164,6 +166,7 @@
     <ClCompile Include="Source\Renderer\Model.cpp" />
     <ClCompile Include="Source\Renderer\Shader.cpp" />
     <ClCompile Include="Source\Renderer\stb_image.cpp" />
+    <ClCompile Include="Source\Renderer\Terrain.cpp" />
     <ClCompile Include="Source\Renderer\TextRenderer.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -36,6 +36,8 @@ public:
 
 	void Draw() const;
 
+	void setPosition(glm::vec3 pos);
+
 private:
 	/*  Data  */
 	Renderer::Model* model;

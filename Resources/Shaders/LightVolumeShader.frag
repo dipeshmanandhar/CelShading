@@ -159,5 +159,5 @@ void main()
 	}
 	
 	FragColor = vec4(result / (result + vec3(1.0f)), 1.0f);
-	//FragColor = vec4(vec3(gl_FragDepth), 1.0f);
+	//FragColor = vec4(Normal, 1.0f);
 }

@@ -65,7 +65,7 @@ unsigned int frames = 0;
 float fps = 0.0f;
 
 // Rendering Variables
-	// Framebuffers 
+	// Framebuffers
 unsigned int gBuffer;
 	// Textures
 unsigned int gPosition, gNormal, gColorSpec, cubemapTexture;
@@ -503,6 +503,7 @@ void initialize()
 	Renderer::Loader::loadModels();
 
 	Entity::initialize(geometryShader, view, projection);
+	Renderer::Terrain::initialize(geometryShader, view, projection);
 
 	initializeTextRenderer();
 
@@ -660,7 +661,6 @@ void lightVolumePass()
 	//Directional Light
 	lightVolumeShader.setVec3("dirLight.Direction", glm::vec3(view * glm::vec4(dirLightDirection, 0.0f)));
 	//Point Lights
-	pointLightPositions[0] = glm::vec3(cos(glfwGetTime()), 2.0f, sin(glfwGetTime()));
 	for (unsigned int i = 0; i < NUM_POINT_LIGHTS; i++)
 		lightVolumeShader.setVec3("pointLights[" + to_string(i) + "].Position", glm::vec3(view * glm::vec4(pointLightPositions[i], 1.0f)));
 

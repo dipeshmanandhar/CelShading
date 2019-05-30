@@ -18,23 +18,12 @@
 
 //Created H Files
 #include "Shader.h"
+#include "VertexStructs.h"
 
 using namespace std;
 
 namespace Renderer
 {
-	struct Vertex {
-		glm::vec3 Position;
-		glm::vec3 Normal;
-		glm::vec2 TexCoords;
-	};
-
-	struct Texture {
-		unsigned int id;
-		string type;
-		string path;  // we store the path of the texture to compare with other textures
-	};
-
 	class Mesh {
 	public:
 		/*  Mesh Data  */
