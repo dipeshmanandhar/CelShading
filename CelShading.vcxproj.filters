@@ -22,6 +22,12 @@
     <Filter Include="Header Files\Renderer">
       <UniqueIdentifier>{a7783fd8-8f4e-4161-ab6d-a0f765b39a68}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GameLogic">
+      <UniqueIdentifier>{92852afe-2e72-405a-a4fb-28a293644ca8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\GameLogic">
+      <UniqueIdentifier>{d761b840-e4ca-454e-af5e-9bc652cf8777}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Headers\Entity.h">
@@ -62,6 +68,9 @@
     </ClInclude>
     <ClInclude Include="Headers\Renderer\VertexStructs.h">
       <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\GameLogic\GameObject.h">
+      <Filter>Header Files\GameLogic</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -138,6 +147,9 @@
     </ClCompile>
     <ClCompile Include="Source\Renderer\Terrain.cpp">
       <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\GameLogic\GameObject.cpp">
+      <Filter>Source Files\GameLogic</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

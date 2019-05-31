@@ -34,7 +34,7 @@ Renderer::Terrain::Terrain(float terScale, float terHeight, float terImageTiles)
 	VAO = VBO = EBO = 0;
 }
 
-Renderer::Terrain::Terrain(string heightmapFile, vector<string> textureFiles, float terScale, float terHeight, float terImageTiles) : 
+Renderer::Terrain::Terrain(const string& heightmapFile, const vector<string>& textureFiles, float terScale, float terHeight, float terImageTiles) : 
 	TERRAIN_SCALE(terScale), TERRAIN_HEIGHT(terHeight), TERRAIN_IMAGE_TILES(terImageTiles)
 {
 	// set up VAO, VBO and EBO
@@ -86,21 +86,32 @@ void Renderer::Terrain::Draw() const
 	glActiveTexture(GL_TEXTURE0);
 }
 
-void Renderer::Terrain::setupVertexData(string heightmapFile)
+float Renderer::Terrain::getHeightAt(const glm::vec3& position) const
 {
-	int width, height, nrComponents;
-	unsigned char* data = stbi_load(heightmapFile.c_str(), &width, &height, &nrComponents, 1); //load in grayscale
+	unsigned int x = (unsigned int) roundf(position.x * (float)width / TERRAIN_SCALE - 0.5f);
+	unsigned int z = (unsigned int)roundf(position.z * (float)height / TERRAIN_SCALE - 0.5f);
+
+	return vertices[z * width + x].Position.y;
+}
+
+void Renderer::Terrain::setupVertexData(const string& heightmapFile)
+{
+	int w, h, nrComponents;
+	unsigned char* data = stbi_load(heightmapFile.c_str(), &w, &h, &nrComponents, 1); //load in grayscale
+
+	width = (unsigned int)w;
+	height = (unsigned int)h;
 
 	if (data)
 	{
 		// set up vertices data
-		for (unsigned int z = 0; z < height; z++)
+		for (unsigned int z = 0; z < (unsigned int)height; z++)
 		{
-			for (unsigned int x = 0; x < width; x++)
+			for (unsigned int x = 0; x < (unsigned int)width; x++)
 			{
 				Vertex v;
 
-				glm::vec3 point = glm::vec3((float)x / (float)width, (float)data[z * width + x] / 255.0f, (float)z / (float)height);
+				glm::vec3 point = glm::vec3( ((float)x + 0.5f) / (float)width, (float)data[z * width + x] / 255.0f, ((float)z + 0.5f) / (float)height);
 
 				// position data
 				v.Position = glm::vec3(TERRAIN_SCALE * point.x, TERRAIN_HEIGHT * point.y, TERRAIN_SCALE * point.z);
@@ -161,9 +172,9 @@ void Renderer::Terrain::setupVertexData(string heightmapFile)
 
 		// set up indices data (in counter clockwise winding order for front faces)
 
-		for (unsigned int r = 0; r < height - 1; r++)
+		for (unsigned int r = 0; r < (unsigned int)height - 1; r++)
 		{
-			for (unsigned int c = 0; c < width - 1; c++)
+			for (unsigned int c = 0; c < (unsigned int)width - 1; c++)
 			{
 				//bottom left triangle
 				indices.push_back(c + r * width);
@@ -207,7 +218,7 @@ void Renderer::Terrain::setupVertexData(string heightmapFile)
 	stbi_image_free(data);
 }
 
-void Renderer::Terrain::setupTextures(vector<string> textureFiles)
+void Renderer::Terrain::setupTextures(const vector<string>& textureFiles)
 {
 	for (string textureFile : textureFiles)
 	{

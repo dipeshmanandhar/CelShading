@@ -30,24 +30,27 @@ namespace Renderer
 
 		Terrain(float terScale = 0.0f, float terHeight = 0.0f, float terImageTiles = 0.0f);
 
-		Terrain(string heightmapFile, vector<string> textureFiles, float terScale, float terHeight, float terImageTiles);
+		Terrain(const string& heightmapFile, const vector<string>& textureFiles, float terScale, float terHeight, float terImageTiles);
 
 		/*  Functions  */
 		
 		static void initialize(Shader& s, glm::mat4& v, glm::mat4& p);
 
-		void setupVertexData(string heightmapFile);
+		void setupVertexData(const string& heightmapFile);
 
-		void setupTextures(vector<string> textureFiles);
+		void setupTextures(const vector<string>& textureFiles);
 
 		void Draw() const;
 	
+		float getHeightAt(const glm::vec3& position) const;
+
 	private:
 		/*  Data  */
 		unsigned int VAO, VBO, EBO;
+		unsigned int width, height;
 		vector<unsigned int> indices;
 		vector<Vertex> vertices;
-		vector<Texture> textures; //TODO: make into a vector to support multiple texture files (i.e., diffuse and specular)
+		vector<Texture> textures;
 		const float TERRAIN_SCALE, TERRAIN_HEIGHT, TERRAIN_IMAGE_TILES;
 
 		static glm::mat4 *view, *projection;

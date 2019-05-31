@@ -97,31 +97,6 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 	glViewport(0, 0, width, height);
 }
 
-// method called every frame to check input keys
-void processInput(GLFWwindow* window)
-{
-	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		glfwSetWindowShouldClose(window, true);
-	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	//if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
-	//	glPolygonMode(GL_FRONT_AND_BACK, GL_POINTS);
-
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-		camera.processKeyboard(Renderer::FORWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-		camera.processKeyboard(Renderer::BACKWARD, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-		camera.processKeyboard(Renderer::LEFT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-		camera.processKeyboard(Renderer::RIGHT, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-		camera.processKeyboard(Renderer::UP, deltaTime);
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-		camera.processKeyboard(Renderer::DOWN, deltaTime);
-}
 // glfw: whenever the mouse moves, this callback is called
 void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 {
@@ -184,6 +159,8 @@ int initializeOpenGL()
 	glfwSetCursorPosCallback(window, mouse_callback);
 	//Tell GLFW how to handle mouse scrolling
 	glfwSetScrollCallback(window, scroll_callback);
+	//Tell GLFW how to handle keyboard input
+	glfwSetKeyCallback(window, key_callback);
 
 	// tell GLFW to capture our mouse
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -893,7 +870,7 @@ int main()
 		}
 
 		// input
-		processInput(window);
+		processInput(window, deltaTime);
 
 		update(deltaTime);
 

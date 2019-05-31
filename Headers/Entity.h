@@ -38,11 +38,15 @@ public:
 
 	void setPosition(glm::vec3 pos);
 
+	glm::vec3 getPosition() const;
+
+protected:
+	glm::vec3 position; //in world space
+	float yaw, pitch; //in degrees
+
 private:
 	/*  Data  */
 	Renderer::Model* model;
-	glm::vec3 position; //in world space
-	float yaw, pitch; //in degrees
 
 	static Renderer::Shader*& shader();
 	static glm::mat4*& view();
