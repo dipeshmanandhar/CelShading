@@ -88,10 +88,23 @@ void Renderer::Terrain::Draw() const
 
 float Renderer::Terrain::getHeightAt(const glm::vec3& position) const
 {
-	unsigned int x = (unsigned int) roundf(position.x * (float)width / TERRAIN_SCALE - 0.5f);
-	unsigned int z = (unsigned int)roundf(position.z * (float)height / TERRAIN_SCALE - 0.5f);
+	float x = position.x * (float)width / TERRAIN_SCALE - 0.5f;
+	float z = position.z * (float)height / TERRAIN_SCALE - 0.5f;
 
-	return vertices[z * width + x].Position.y;
+	unsigned int left = (unsigned int)floor(x);
+	unsigned int right = left + 1;
+	unsigned int down = (unsigned int)floor(z);
+	unsigned int up = down + 1;
+
+	float topLeft = vertices[up * width + left].Position.y;
+	float topRight = vertices[up * width + right].Position.y;
+	float bottomLeft = vertices[down * width + left].Position.y;
+	float bottomRight = vertices[down * width + right].Position.y;
+
+	float topHeight = glm::mix(topLeft, topRight, x - (float)left);
+	float bottomHeight = glm::mix(bottomLeft, bottomRight, x - (float)left);
+
+	return glm::mix(bottomHeight, topHeight, z - down);
 }
 
 void Renderer::Terrain::setupVertexData(const string& heightmapFile)

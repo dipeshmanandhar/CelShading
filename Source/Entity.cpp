@@ -2,6 +2,7 @@
 
 //Created H Files
 #include "../Headers/Entity.h"
+#include "../Headers/Renderer/Camera.h"
 
 //public:
 /* Constructor */
@@ -11,8 +12,8 @@ Entity::Entity()
 	//do nothing
 	model = NULL;
 	position = glm::vec3(0.0f);
-	yaw = 0.0f;
-	pitch = -90.0f;
+	yaw = Renderer::YAW;
+	pitch = Renderer::PITCH;
 	shader() = NULL;
 	view() = projection() = NULL;
 }
@@ -40,13 +41,13 @@ void Entity::Draw() const
 {
 	glm::mat4 modelMatrix(1.0f);
 	modelMatrix = glm::translate(modelMatrix, position);
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f));
-	modelMatrix = glm::rotate(modelMatrix, glm::radians(yaw), glm::vec3(0.0f, 1.0f, 0.0f));
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(pitch), glm::vec3(1.0f, 0.0f, 0.0f)); //TODO: remove the -90.0f on pitch
+	modelMatrix = glm::rotate(modelMatrix, glm::radians(-yaw), glm::vec3(0.0f, 1.0f, 0.0f));
 
 	glm::mat4 mv = *view() * modelMatrix;
 	shader()->setMat4("mv", mv);
 	shader()->setMat4("mvp", *projection() * mv);
-	shader()->setMat3("mvNormal", transpose(inverse(glm::mat3(mv))));
+	shader()->setMat3("mvNormal", glm::transpose(glm::inverse(glm::mat3(mv))));
 
 	model->Draw(*shader());
 }

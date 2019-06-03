@@ -15,6 +15,7 @@
 //Created H Files
 #include "../Entity.h"
 #include "../Renderer/Loader.h"
+#include "../Renderer/Camera.h"
 
 //using namespace std;
 
@@ -44,13 +45,29 @@ namespace GameLogic
 		glm::vec3 getVelocity() const;
 
 		glm::vec3 getAcceleration() const;
+		
+		// Processes input received from any keyboard-like input system. Accepts input parameter in the form of camera defined ENUM (to abstract it from windowing systems)
+		void processKeyboard(Renderer::Camera_Movement direction);
+
+		// Processes input received from a mouse input system. Expects the offset value in both the x and y direction.
+		//void processMouseMovement(float xoffset, float yoffset, GLboolean constrainPitch = true);
+
+		void setYaw(float y);
 
 	protected:
+		/*  Data  */
+		
 		glm::vec3 velocity, acceleration;
+		float movementSpeed;
+
+		glm::vec3 front, right, up;
+		const glm::vec3 WORLD_UP;
 
 	private:
-		/*  Data  */
+		/*  Functions  */
 
+		// Calculates the front vector from the (updated) Euler Angles
+		void updateDirectionVectors();
 	};
 }
 

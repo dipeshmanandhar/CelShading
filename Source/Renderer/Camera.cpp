@@ -1,10 +1,15 @@
+//External Library for Matrix Math (GLM)
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
 // Project files
 #include "../../Headers/Renderer/Camera.h"
 
 //public:
 
 // Constructor with vectors
-Renderer::Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+Renderer::Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM), followRadius(FOLLOW_RADIUS), followHeight(FOLLOW_HEIGHT)
 {
 	Position = position;
 	WorldUp = up;
@@ -13,7 +18,7 @@ Renderer::Camera::Camera(glm::vec3 position, glm::vec3 up, float yaw, float pitc
 	updateCameraVectors();
 }
 // Constructor with scalar values
-Renderer::Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM)
+Renderer::Camera::Camera(float posX, float posY, float posZ, float upX, float upY, float upZ, float yaw, float pitch) : Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(SPEED), MouseSensitivity(SENSITIVITY), Zoom(ZOOM), followRadius(FOLLOW_RADIUS), followHeight(FOLLOW_HEIGHT)
 {
 	Position = glm::vec3(posX, posY, posZ);
 	WorldUp = glm::vec3(upX, upY, upZ);
@@ -79,6 +84,31 @@ void Renderer::Camera::processMouseScroll(float yoffset)
 		Zoom = MIN_ZOOM;
 	if (Zoom >= MAX_ZOOM)
 		Zoom = MAX_ZOOM;
+}
+
+void Renderer::Camera::follow(const glm::vec3& point)
+{
+	Position = point - Front * followRadius + WorldUp * followHeight;
+}
+
+float Renderer::Camera::getYaw() const
+{
+	return Yaw;
+}
+
+float Renderer::Camera::getPitch() const
+{
+	return Pitch;
+}
+
+glm::vec3 Renderer::Camera::getFront() const
+{
+	return Front;
+}
+
+glm::vec3 Renderer::Camera::getUp() const
+{
+	return Up;
 }
 
 //private:

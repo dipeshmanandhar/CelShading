@@ -6,6 +6,8 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+// Created H files
+
 namespace Renderer
 {
 	// Defines several possible options for camera movement. Used as abstraction to stay away from window-system specific input methods
@@ -15,17 +17,23 @@ namespace Renderer
 		LEFT,
 		RIGHT,
 		UP,
-		DOWN
+		DOWN,
+		RELEASE_FORWARD,
+		RELEASE_BACKWARD,
+		RELEASE_LEFT,
+		RELEASE_RIGHT
 	};
 
 	// Default camera values
-	const float YAW = -90.0f;
+	const float YAW = 0.0f;
 	const float PITCH = 0.0f;
-	const float SPEED = 2.5f;
+	const float SPEED = 5.0f;
 	const float SENSITIVITY = 0.1f;
 	const float ZOOM = 45.0f;
 	const float MIN_ZOOM = 1.0f;
 	const float MAX_ZOOM = 45.0f;
+	const float FOLLOW_RADIUS = 3.0f;
+	const float FOLLOW_HEIGHT = 1.5f;
 
 
 	// An abstract camera class that processes input and calculates the corresponding Euler Angles, Vectors and Matrices for use in OpenGL
@@ -53,6 +61,16 @@ namespace Renderer
 		// Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 		void processMouseScroll(float yoffset);
 
+		void follow(const glm::vec3& point);
+
+		float getYaw() const;
+
+		float getPitch() const;
+
+		glm::vec3 getFront() const;
+
+		glm::vec3 getUp() const;
+
 	private:
 		// Camera Attributes
 		glm::vec3 Position;
@@ -66,6 +84,9 @@ namespace Renderer
 		// Camera options
 		float MovementSpeed;
 		float MouseSensitivity;
+		// Following options;
+		float followRadius;
+		float followHeight;
 
 		// Calculates the front vector from the Camera's (updated) Euler Angles
 		void updateCameraVectors();

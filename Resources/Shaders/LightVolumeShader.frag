@@ -26,6 +26,8 @@ uniform PointLight pointLights[NR_POINT_LIGHTS];
 
 uniform int lightID; //-1 is directionalLight, >= 0 is a point light at same index
 
+uniform vec3 skyColor;
+
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 600
 #define SOBEL_OFFSET 1
@@ -97,7 +99,8 @@ void main()
     vec3 Normal = texture(gNormal, TexCoord).rgb;
 	if (Normal == vec3(-1.0f))
 		discard;
-	vec3 FragPos = texture(gPosition, TexCoord).rgb;
+	vec4 posVis = texture(gPosition, TexCoord);
+	vec3 FragPos = posVis.rgb;
 	vec4 colorSpec = texture(gColorSpec, TexCoord);
 	if(colorSpec == vec4(0.0f))
 	{
@@ -159,5 +162,7 @@ void main()
 	}
 	
 	FragColor = vec4(result / (result + vec3(1.0f)), 1.0f);
+	FragColor = mix(vec4(skyColor, 1.0f), FragColor, posVis.w);
+
 	//FragColor = vec4(Normal, 1.0f);
 }

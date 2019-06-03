@@ -44,7 +44,7 @@ using namespace std;
 // compile-time constants
 #define PI 3.14159265358979323846f
 #define NEAR_PLANE 0.1f
-#define FAR_PLANE 100.0f
+#define FAR_PLANE 500.0f
 #define PIXEL_SCALE 1
 
 // Global Variables ------------------------------------------------------------------------------------
@@ -115,7 +115,16 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	lastX = xposf;
 	lastY = yposf;
 
-	camera.processMouseMovement(xoffset, yoffset);
+	processMouseMovement(xoffset, yoffset);
+
+	if (yoffset != 0.0f)
+	{
+		skyboxShader.use();
+		//skyboxShader.setFloat("viewY", sin(glm::radians(camera.getPitch())));
+		//skyboxShader.setFloat("viewY", camera.getFront().y);
+		glm::vec3 offset = glm::mat3(view) * glm::normalize(glm::vec3(camera.getFront().x, 0.0f, camera.getFront().z));
+		skyboxShader.setFloat("viewY", -offset.y / glm::length(glm::vec2(offset.x, offset.z)));
+	}
 }
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -406,10 +415,10 @@ void initializeGBuffer()
 	glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
 	//unsigned int gPosition, gNormal, gColorSpec;	// made into global variables
 
-	// - position color buffer (16 or 32 bit float per component accuracy)
+	// - position + visibility (i.e., fog) color buffer (16 or 32 bit float per component accuracy)
 	glGenTextures(1, &gPosition);
 	glBindTexture(GL_TEXTURE_2D, gPosition);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, SCREEN_WIDTH / PIXEL_SCALE, SCREEN_HEIGHT / PIXEL_SCALE, 0, GL_RGB, GL_FLOAT, NULL);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, SCREEN_WIDTH / PIXEL_SCALE, SCREEN_HEIGHT / PIXEL_SCALE, 0, GL_RGBA, GL_FLOAT, NULL);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gPosition, 0);
@@ -451,6 +460,11 @@ void initializeGBuffer()
 
 void initializeSkybox()
 {
+	if (skyboxFilename == "")
+	{
+		cubemapTexture = 0;
+		return;
+	}
 	//load Skybox
 	vector<string> faces
 	{
@@ -498,15 +512,18 @@ void sendConstantUniforms()
 	// don't forget to 'use' the corresponding shader program first (to set the uniforms)
 	lightVolumeShader.use();
 
+	//set sky color
+	lightVolumeShader.setVec3("skyColor", skyColor);
+
 	//set light attributes
 	// Directional Light
 	lightVolumeShader.setVec3("dirLight.Color", dirLightColor); // darken the light a bit to fit the scene
 
 	//Point Lights
-	//light coverage distance at 13 (pixels ?)
+	//light coverage distance at 65 (meters ?)
 	float constant = 1.0f;
-	float linear = 0.35f;
-	float quadratic = 0.44f;
+	float linear = 0.07f;
+	float quadratic = 0.017f;
 	//float lightMax = fmaxf(fmaxf(lightColor.r, lightColor.g), lightColor.b);
 	float lightMax = 1.0f;
 	float threshold = 0.15f; //should be 0.25f ? (calculated as 1 / (numShades + 1) )
@@ -540,6 +557,12 @@ void sendConstantUniforms()
 	lightVolumeShader.setInt("gPosition", 0);
 	lightVolumeShader.setInt("gNormal", 1);
 	lightVolumeShader.setInt("gColorSpec", 2);
+
+	// skybox shader ---------------------------------------------------------------------------------------
+	skyboxShader.use();
+
+	//set sky color
+	skyboxShader.setVec3("skyColor", skyColor);
 }
 
 void enableConstantTests()
@@ -629,7 +652,7 @@ void stencilPass()
 void lightVolumePass()
 {
 	glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
-	glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+	glClearColor(skyColor.r, skyColor.g, skyColor.b, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 
 	lightVolumeShader.use();
@@ -816,7 +839,8 @@ void forwardRenderingPass()
 
 	//drawOutlines();
 	drawLamps();
-	drawSkybox();
+	if(cubemapTexture != 0)
+		drawSkybox();
 	drawText();
 
 	//unbind VAO
