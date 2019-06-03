@@ -133,8 +133,7 @@ void processInput(GLFWwindow* window, float dTime)
 		player.setYaw(camera.getYaw() + yawOffset);
 
 	if(glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
-		if (terrain.getHeightAt(player.getPosition()) >= player.getPosition().y - TOLERANCE) //if player is on the ground
-			player.processKeyboard(Renderer::UP);
+		player.processKeyboard(Renderer::UP);
 }
 
 // method called only on mouse events
@@ -148,7 +147,7 @@ void setup()
 	//cout << "Setting Up..." << endl;
 	player.setModel(Renderer::Loader::CHIYA);
 
-	player.setPosition(glm::vec3(50.0f,50.0f, 50.0f));
+	player.setPosition(glm::vec3(500.0f,50.0f, 500.0f));
 	
 	Renderer::TextRenderer::setTextColor(glm::vec3(1.0f, 1.0f, 1.0f), glm::vec3(0.0f, 0.5f, 0.8f));
 
@@ -162,18 +161,27 @@ void update(float dTime)
 
 	float height = terrain.getHeightAt(player.getPosition());
 
+	player.update(dTime);
+
+	glm::vec3 playerPos = player.getPosition();
+	if (playerPos.x < terrain.getMinX())
+		playerPos.x = terrain.getMinX();
+	else if(playerPos.x > terrain.getMaxX())
+		playerPos.x = terrain.getMaxX();
+	if (playerPos.z < terrain.getMinZ())
+		playerPos.z = terrain.getMinZ();
+	else if (playerPos.z > terrain.getMaxZ())
+		playerPos.z = terrain.getMaxZ();
+	player.setPosition(playerPos);
+
 	if (height >= player.getPosition().y)
 	{
-		if(height > player.getPosition().y)
-			player.setVelocity(glm::vec3(player.getVelocity().x, 0.0f, player.getVelocity().z));
-		
-		player.setAcceleration(glm::vec3(player.getAcceleration().x, 0.0f, player.getAcceleration().z));
+		player.land();
 		player.setPosition(glm::vec3(player.getPosition().x, height, player.getPosition().z));
 	}
 	else
 		player.setAcceleration(glm::vec3(0.0f, -GRAVITY, 0.0f)); //apply gravity
 
-	player.update(dTime);
 
 	camera.follow(player.getPosition());
 

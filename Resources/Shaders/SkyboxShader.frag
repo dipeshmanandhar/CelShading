@@ -10,8 +10,8 @@ uniform vec3 skyColor;
 #define SCREEN_HEIGHT 600
 
 uniform float viewY;
-const float lowerLimit = 0.5f;
-const float upperLimit = 0.75f;
+const float lowerLimit = 0.1f;
+const float upperLimit = 0.2f;
 
 float flatten(float value, int numColors)
 {
@@ -30,7 +30,8 @@ void main()
 
 	FragColor = vec4(skyColor * brightness, 1.0f);
 	
-	float visibility = ( (gl_FragCoord.y / SCREEN_HEIGHT + viewY) - lowerLimit) / (upperLimit - lowerLimit);
+	//float visibility = ( (gl_FragCoord.y / SCREEN_HEIGHT + viewY) - lowerLimit) / (upperLimit - lowerLimit);
+	float visibility = (TexCoords.y - lowerLimit) / (upperLimit - lowerLimit);
 	visibility = clamp(visibility, 0.0f, 1.0f);
 
 	FragColor = mix(vec4(skyColor, 1.0f), FragColor, visibility);

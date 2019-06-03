@@ -116,15 +116,6 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
 	lastY = yposf;
 
 	processMouseMovement(xoffset, yoffset);
-
-	if (yoffset != 0.0f)
-	{
-		skyboxShader.use();
-		//skyboxShader.setFloat("viewY", sin(glm::radians(camera.getPitch())));
-		//skyboxShader.setFloat("viewY", camera.getFront().y);
-		glm::vec3 offset = glm::mat3(view) * glm::normalize(glm::vec3(camera.getFront().x, 0.0f, camera.getFront().z));
-		skyboxShader.setFloat("viewY", -offset.y / glm::length(glm::vec2(offset.x, offset.z)));
-	}
 }
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)

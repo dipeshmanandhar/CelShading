@@ -41,6 +41,14 @@ namespace Renderer
 		void setupTextures(const vector<string>& textureFiles);
 
 		void Draw() const;
+
+		float getMinX() const;
+
+		float getMaxX() const;
+		
+		float getMinZ() const;
+		
+		float getMaxZ() const;
 	
 		float getHeightAt(const glm::vec3& position) const;
 
@@ -52,6 +60,7 @@ namespace Renderer
 		vector<Vertex> vertices;
 		vector<Texture> textures;
 		const float TERRAIN_SCALE, TERRAIN_HEIGHT, TERRAIN_IMAGE_TILES;
+		float minX, maxX, minZ, maxZ;
 
 		static glm::mat4 *view, *projection;
 		static Shader* shader;

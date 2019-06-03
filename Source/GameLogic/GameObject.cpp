@@ -29,6 +29,7 @@ GameLogic::GameObject::GameObject(const glm::vec3& pos) :
 	//yaw = Renderer::YAW;
 	//pitch = Renderer::PITCH;
 	updateDirectionVectors();
+	inAir = false;
 }
 
 GameLogic::GameObject::GameObject(Renderer::Loader::modelID id, const glm::vec3& pos) :
@@ -40,20 +41,31 @@ GameLogic::GameObject::GameObject(Renderer::Loader::modelID id, const glm::vec3&
 	//yaw = Renderer::YAW;
 	//pitch = Renderer::PITCH;
 	updateDirectionVectors();
+	inAir = false;
 }
 	
 /*  Functions   */
 
 void GameLogic::GameObject::update(float dTime)
 {
-	velocity += acceleration * dTime;
-	position += (velocity.x * right + velocity.y * up + velocity.z * front) * dTime;
+	velocity += acceleration * dTime * GAME_SPEED;
+	position += (velocity.x * right + velocity.y * up + velocity.z * front) * dTime * GAME_SPEED;
 }
 
-void GameLogic::GameObject::stop()
+void GameLogic::GameObject::jump()
 {
-	velocity = glm::vec3(0.0f);
-	acceleration = glm::vec3(0.0f);
+	if (!inAir)
+	{
+		velocity.y = movementSpeed;
+		inAir = true;
+	}
+}
+
+void GameLogic::GameObject::land()
+{
+	velocity.y = 0.0f;
+	acceleration.y = 0.0f;
+	inAir = false;
 }
 
 void GameLogic::GameObject::addVelocity(const glm::vec3& v)
@@ -89,7 +101,7 @@ void GameLogic::GameObject::processKeyboard(Renderer::Camera_Movement direction)
 	else if (direction == Renderer::RELEASE_FORWARD || direction == Renderer::RELEASE_BACKWARD || direction == Renderer::RELEASE_LEFT || direction == Renderer::RELEASE_RIGHT)
 		velocity.z = 0.0f;
 	else if (direction == Renderer::UP)
-		velocity.y = movementSpeed;
+		jump();
 	//else if (direction == DOWN)
 	//	velocity -= Up * velocity;
 	//Position.y = 0.0f; //prevents the user from "flying" by keeping them on the xz-plane

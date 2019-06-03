@@ -86,10 +86,33 @@ void Renderer::Terrain::Draw() const
 	glActiveTexture(GL_TEXTURE0);
 }
 
+float Renderer::Terrain::getMinX() const
+{
+	return minX;
+}
+
+float Renderer::Terrain::getMaxX() const
+{
+	return maxX;
+}
+
+float Renderer::Terrain::getMinZ() const
+{
+	return minZ;
+}
+
+float Renderer::Terrain::getMaxZ() const
+{
+	return maxZ;
+}
+
 float Renderer::Terrain::getHeightAt(const glm::vec3& position) const
 {
 	float x = position.x * (float)width / TERRAIN_SCALE - 0.5f;
 	float z = position.z * (float)height / TERRAIN_SCALE - 0.5f;
+
+	if (x < 0 || x >= width - 1 || z < 0 || z >= height - 1)
+		return 0.0f;
 
 	unsigned int left = (unsigned int)floor(x);
 	unsigned int right = left + 1;
@@ -225,6 +248,11 @@ void Renderer::Terrain::setupVertexData(const string& heightmapFile)
 		glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
 
 		glBindVertexArray(0);
+
+		minX = 0.5f * TERRAIN_SCALE / (float)width;
+		maxX = ((float)width - 0.5f) * TERRAIN_SCALE / (float)width - 0.0001f;
+		minZ = 0.5f * TERRAIN_SCALE / (float)height;
+		maxZ = ((float)height - 0.5f) * TERRAIN_SCALE / (float)height - 0.0001f;
 	}
 	else
 		cout << "Heightmap failed to load at path: " << heightmapFile << endl;

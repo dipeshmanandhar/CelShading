@@ -19,6 +19,8 @@
 
 //using namespace std;
 
+#define GAME_SPEED 1.0f
+
 namespace GameLogic
 {
 	class GameObject : public Entity
@@ -34,7 +36,9 @@ namespace GameLogic
 
 		void update(float dTime);
 
-		void stop();
+		void jump();
+
+		void land();
 
 		void addVelocity(const glm::vec3& v);
 
@@ -64,6 +68,10 @@ namespace GameLogic
 		const glm::vec3 WORLD_UP;
 
 	private:
+		/*  Data  */
+
+		bool inAir;
+
 		/*  Functions  */
 
 		// Calculates the front vector from the (updated) Euler Angles
