@@ -19,6 +19,7 @@
 //Created H Files
 #include "Shader.h"
 #include "VertexStructs.h"
+#include "Bone.h"
 
 using namespace std;
 
@@ -26,19 +27,25 @@ namespace Renderer
 {
 	class Mesh {
 	public:
-		/*  Mesh Data  */
-		vector<Vertex> vertices;
-		vector<unsigned int> indices;
-		vector<Texture> textures;
 		/*  Functions  */
 		Mesh(const vector<Vertex>& v, const vector<unsigned int>& i, const vector<Texture>& t);
 
 		void Draw(const Shader& shader) const;
 	private:
+		/*  Mesh Data  */
+		vector<Vertex> vertices;
+		vector<unsigned int> indices;
+		vector<Texture> textures;
+
 		/*  Render data  */
 		unsigned int VAO, VBO, EBO;
+		//vector<unsigned int> boneIDs;
+
 		/*  Functions    */
 		void setupMesh();
+
+		friend class Model;
+		friend class Loader;
 	};
 }
 

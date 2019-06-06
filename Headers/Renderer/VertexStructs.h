@@ -19,6 +19,8 @@ namespace Renderer
 		glm::vec3 Position;
 		glm::vec3 Normal;
 		glm::vec2 TexCoords;
+		glm::uvec4 BoneIDs;
+		glm::vec4 BoneWeights;
 	};
 
 	struct Texture {

@@ -32,6 +32,7 @@ Renderer::Terrain::Terrain(float terScale, float terHeight, float terImageTiles)
 	TERRAIN_SCALE(terScale), TERRAIN_HEIGHT(terHeight), TERRAIN_IMAGE_TILES(terImageTiles)
 {
 	VAO = VBO = EBO = 0;
+
 }
 
 Renderer::Terrain::Terrain(const string& heightmapFile, const vector<string>& textureFiles, float terScale, float terHeight, float terImageTiles) : 
@@ -44,21 +45,21 @@ Renderer::Terrain::Terrain(const string& heightmapFile, const vector<string>& te
 
 /*  Functions  */
 
-void Renderer::Terrain::initialize(Shader& s, glm::mat4& v, glm::mat4& p)
+void Renderer::Terrain::initialize(glm::mat4& v, glm::mat4& p)
 {
 	view = &v;
 	projection = &p;
-	shader = &s;
+	shader.initialize("Resources/Shaders/TerrainShader.vert", "Resources/Shaders/TerrainShader.frag");
 }
 
 void Renderer::Terrain::Draw() const
 {
-	shader->use();
+	shader.use();
 
 	// the model matrix is the identity matrix (i.e., the terrain cannot be rotated, translated, or scaled on the fly)
-	shader->setMat4("mv", *view);
-	shader->setMat4("mvp", *projection * *view);
-	shader->setMat3("mvNormal", transpose(inverse(glm::mat3(*view))));
+	shader.setMat4("mv", *view);
+	shader.setMat4("mvp", *projection * *view);
+	shader.setMat3("mvNormal", transpose(inverse(glm::mat3(*view))));
 
 	unsigned int diffuseNr = 1;
 	unsigned int specularNr = 1;
@@ -75,7 +76,7 @@ void Renderer::Terrain::Draw() const
 
 		//TODO: add ambient texture?
 
-		shader->setInt((name + number).c_str(), i);
+		shader.setInt((name + number).c_str(), i);
 		glBindTexture(GL_TEXTURE_2D, textures[i].id);
 	}
 
@@ -275,4 +276,4 @@ void Renderer::Terrain::setupTextures(const vector<string>& textureFiles)
 //private:
 
 glm::mat4* Renderer::Terrain::view, * Renderer::Terrain::projection;
-Renderer::Shader* Renderer::Terrain::shader;
+Renderer::Shader Renderer::Terrain::shader;

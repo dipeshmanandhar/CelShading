@@ -145,7 +145,7 @@ void processMouseMovement(float xOffset, float yOffset)
 void setup()
 {
 	//cout << "Setting Up..." << endl;
-	player.setModel(Renderer::Loader::CHIYA);
+	player.setModel(Renderer::Loader::STORM_TROOPER);
 
 	player.setPosition(glm::vec3(500.0f,50.0f, 500.0f));
 	

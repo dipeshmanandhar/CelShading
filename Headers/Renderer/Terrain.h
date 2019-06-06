@@ -34,7 +34,7 @@ namespace Renderer
 
 		/*  Functions  */
 		
-		static void initialize(Shader& s, glm::mat4& v, glm::mat4& p);
+		static void initialize(glm::mat4& v, glm::mat4& p);
 
 		void setupVertexData(const string& heightmapFile);
 
@@ -63,7 +63,7 @@ namespace Renderer
 		float minX, maxX, minZ, maxZ;
 
 		static glm::mat4 *view, *projection;
-		static Shader* shader;
+		static Shader shader;
 
 		/*  Functions    */
 	};

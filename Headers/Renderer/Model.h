@@ -10,18 +10,26 @@
 //C++ Libraries
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 //Created H Files
 #include "Shader.h"
 #include "Mesh.h"
+#include "Bone.h"
 
 using namespace std;
+
+// constants
+//#define MAX_BONES 50
 
 namespace Renderer
 {
 	class Model
 	{
 	public:
+
+		vector<Bone> bones;
+
 		/* Constructor */
 		Model();
 
@@ -43,7 +51,7 @@ namespace Renderer
 		}
 		*/
 
-		void Draw(const Shader& shader) const;
+		void Draw(const Shader& shader);
 
 	private:
 		/*  Model Data  */
@@ -51,6 +59,20 @@ namespace Renderer
 		vector<Mesh> meshes;
 		string directory;
 		vector<Texture> textures_loaded;
+		unordered_map<string, unsigned int> nameToBoneID;
+		
+		/*  Functions  */
+
+		void addBone(const Bone& bone, const string& name);
+
+		Bone& getBone(const string& name);
+
+		bool containsBone(const string& name) const;
+
+		void updateAllBones(Bone& bone, const glm::mat4& transform = glm::mat4(1.0f));
+
+		void setUp();
+
 		friend class Loader;
 	};
 }

@@ -40,7 +40,6 @@ void Renderer::Mesh::Draw(const Shader& shader) const
 	//shader.setInt("material.ambient", ); //TODO: read in shininess factor
 	//shader.setFloat("material.shininess", 32); //TODO: read in shininess factor // 05.17.2019 - moved to a const value in LightingPassShader.frag
 
-
 	// draw mesh
 	glBindVertexArray(VAO);
 	glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
@@ -51,8 +50,6 @@ void Renderer::Mesh::Draw(const Shader& shader) const
 //private:
 
 /*  Render data  */
-
-unsigned int VAO, VBO, EBO;
 
 /*  Functions    */
 
@@ -80,6 +77,12 @@ void Renderer::Mesh::setupMesh()
 	// vertex texture coords
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, TexCoords));
+	// vertex bone indices
+	glEnableVertexAttribArray(3);
+	glVertexAttribIPointer(3, 3, GL_UNSIGNED_INT, sizeof(Vertex), (void*)offsetof(Vertex, BoneIDs));
+	// vertex bone weights
+	glEnableVertexAttribArray(4);
+	glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, BoneWeights));
 
 	glBindVertexArray(0);
 }

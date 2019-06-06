@@ -1,5 +1,11 @@
 //Dipesh Manandhar 5/15/2019
 
+//C++ libraries
+#include <vector>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+
 //Created H Files
 #include "../../Headers/Renderer/Loader.h"
 
@@ -20,6 +26,7 @@ void Renderer::Loader::loadModels()
 {
 	//models = vector<Model>(NUM_MODELS, Model());
 	loadModel(models()[CHIYA], "Resources/Models/Chiya/Test.fbx");
+	loadModel(models()[STORM_TROOPER], "Resources/Models/dancing-stormtrooper/Test.fbx");
 }
 
 unsigned int Renderer::Loader::TextureFromFile(char const* p, string dir)
@@ -166,21 +173,115 @@ void Renderer::Loader::loadModel(Model& model, const string& path)
 	}
 	model.directory = path.substr(0, path.find_last_of('/'));
 
-	processNode(model, scene->mRootNode, scene);
+	unordered_set<string> necessaryNodes;
+
+	Bone::globalInverseTransform = glm::inverse(assimpToGLM(scene->mRootNode->mTransformation));
+
+	discoverBoneNodes(scene->mRootNode, scene, necessaryNodes);
+
+	processNodeBones(model, scene->mRootNode, necessaryNodes);
+
+	processNodeMeshes(model, scene->mRootNode, scene);
+
+	model.setUp();
 }
 
-void Renderer::Loader::processNode(Model& model, aiNode* node, const aiScene* scene)
+void Renderer::Loader::discoverBoneNodes(aiNode* node, const aiScene* scene, unordered_set<string>& necessaryNodes)
 {
-	// process all the node's meshes (if any)
+	// process all the node's meshes for bones (if any)
 	for (unsigned int i = 0; i < node->mNumMeshes; i++)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		model.meshes.push_back(processMesh(model, mesh, scene));
+		aiBone** bones = mesh->mBones;
+		for (unsigned int j = 0; j < mesh->mNumBones; j++)
+		{
+			aiBone* bone = bones[j];
+			string name = bone->mName.C_Str();
+
+			//necessaryNodes.emplace(name);
+			
+			// also add all parents to set (go up tree until find root node or find another node already found as necessary)
+			aiNode* discoveredNode = findNode(scene->mRootNode, name);
+			while (discoveredNode != NULL && necessaryNodes.count(discoveredNode->mName.C_Str()) == 0)
+			{
+				necessaryNodes.emplace(discoveredNode->mName.C_Str());
+				discoveredNode = discoveredNode->mParent;
+			}
+		}
 	}
 	// then do the same for each of its children
 	for (unsigned int i = 0; i < node->mNumChildren; i++)
 	{
-		processNode(model, node->mChildren[i], scene);
+		discoverBoneNodes(node->mChildren[i], scene, necessaryNodes);
+	}
+}
+
+int Renderer::Loader::processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes)
+{
+	string name = node->mName.C_Str();
+	
+	if (necessaryNodes.count(name) != 0)
+	{
+		// process the node's bone
+		glm::mat4 nodeTransform = assimpToGLM(node->mTransformation);
+
+		Bone bone;
+		bone.boneToParentStatic = assimpToGLM(node->mTransformation);
+		unsigned int boneID = model.bones.size();
+		model.addBone(bone, name);
+
+		//process children nodes
+		for (unsigned int i = 0; i < node->mNumChildren; i++)
+		{
+			int childID = processNodeBones(model, node->mChildren[i], necessaryNodes);
+			if (childID >= 0)
+				model.bones[boneID].children.push_back((unsigned int)childID);
+		}
+		return boneID;
+	}
+	return -1;
+}
+
+void Renderer::Loader::processNodeMeshes(Model& model, aiNode* node, const aiScene* scene, const glm::mat4& modelToParentSpace)
+{
+	glm::mat4 modelToNodeSpace = glm::inverse(assimpToGLM(node->mTransformation)) * modelToParentSpace;
+	// process all the node's meshes (if any)
+	for (unsigned int i = 0; i < node->mNumMeshes; i++)
+	{
+		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
+		Mesh myMesh = processMesh(model, mesh, scene);
+		aiBone** bones = mesh->mBones;
+		for (unsigned int j = 0; j < mesh->mNumBones; j++)
+		{
+			aiBone* bone = bones[j];
+			string name = bone->mName.C_Str();
+			unsigned int boneId = model.nameToBoneID[name];
+
+			model.bones[boneId].modelToBoneStatic = assimpToGLM(bone->mOffsetMatrix) * modelToNodeSpace;
+
+			for (unsigned int k = 0; k < bone->mNumWeights; k++)
+			{
+				aiVertexWeight vw = bone->mWeights[k];
+				Vertex v = myMesh.vertices[vw.mVertexId];
+				for (unsigned int l = 0; l < 4; l++)
+				{
+					if (v.BoneWeights[l] == 0.0f)
+					{
+						v.BoneWeights[l] = vw.mWeight;
+						v.BoneIDs[l] = boneId;
+						break;
+					}
+				}
+			}
+			
+			//myMesh.boneIDs.push_back(boneId);
+		}
+		model.meshes.push_back(myMesh);
+	}
+	// then do the same for each of its children
+	for (unsigned int i = 0; i < node->mNumChildren; i++)
+	{
+		processNodeMeshes(model, node->mChildren[i], scene, modelToNodeSpace);
 	}
 }
 
@@ -215,6 +316,10 @@ Renderer::Mesh Renderer::Loader::processMesh(Model& model, aiMesh* mesh, const a
 		}
 		else
 			vertex.TexCoords = glm::vec2(0.0f, 0.0f);
+		//bone indices
+		vertex.BoneIDs = glm::uvec4(0);
+		//bone weights
+		vertex.BoneWeights = glm::vec4(0.0f);
 
 		vertices.push_back(vertex);
 	}
@@ -241,7 +346,7 @@ Renderer::Mesh Renderer::Loader::processMesh(Model& model, aiMesh* mesh, const a
 	return Mesh(vertices, indices, textures);
 }
 
-vector<Renderer::Texture> Renderer::Loader::loadMaterialTextures(Model& model, aiMaterial * mat, aiTextureType type, const string & typeName)
+vector<Renderer::Texture> Renderer::Loader::loadMaterialTextures(Model& model, aiMaterial* mat, aiTextureType type, const string & typeName)
 {
 	vector<Texture> textures;
 	for (unsigned int i = 0; i < mat->GetTextureCount(type); i++)
@@ -271,3 +376,25 @@ vector<Renderer::Texture> Renderer::Loader::loadMaterialTextures(Model& model, a
 	return textures;
 }
 
+glm::mat4 Renderer::Loader::assimpToGLM(const aiMatrix4x4& matrix)
+{
+	glm::mat4 toRet;
+
+	for (unsigned int i = 0; i < 16; i++)
+		toRet[i % 4][i / 4] = matrix[i / 4][i % 4];
+
+	return toRet;
+}
+
+aiNode* Renderer::Loader::findNode(aiNode* node, const string& name)
+{
+	if (node->mName.C_Str() == name)
+		return node;
+	for (unsigned int i = 0; i < node->mNumChildren; i++)
+	{
+		aiNode* childSearchResult = findNode(node->mChildren[i], name);
+		if (childSearchResult)
+			return childSearchResult;
+	}
+	return NULL;
+}

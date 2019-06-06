@@ -21,9 +21,11 @@
 //C++ Libraries
 #include <string>
 #include <vector>
+#include <unordered_set>
 
 //Created H Files
 #include "Model.h"
+#include "Mesh.h"
 
 using namespace std;
 
@@ -38,6 +40,7 @@ namespace Renderer
 		enum modelID
 		{
 			CHIYA,
+			STORM_TROOPER,
 			NUM_MODELS
 		};
 
@@ -59,11 +62,19 @@ namespace Renderer
 	private:
 		static void loadModel(Model& model, const string& path);
 
-		static void processNode(Model& model, aiNode* node, const aiScene* scene);
+		static void discoverBoneNodes(aiNode* node, const aiScene* scene, unordered_set<string>& necessaryNodes);
+
+		static int processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes);
+
+		static void processNodeMeshes(Model& model, aiNode* node, const aiScene* scene, const glm::mat4& modelToParentSpace = glm::mat4(1.0f));
 
 		static Mesh processMesh(Model& model, aiMesh* mesh, const aiScene* scene);
 
 		static vector<Texture> loadMaterialTextures(Model& model, aiMaterial* mat, aiTextureType type, const string& typeName);
+
+		static glm::mat4 assimpToGLM(const aiMatrix4x4& matrix);
+
+		static aiNode* findNode(aiNode* node, const string& name);
 	};
 
 	//vector<Model> Loader::models = vector<Model>(NUM_MODELS);

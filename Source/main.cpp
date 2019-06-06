@@ -485,7 +485,7 @@ void initialize()
 	Renderer::Loader::loadModels();
 
 	Entity::initialize(geometryShader, view, projection);
-	Renderer::Terrain::initialize(geometryShader, view, projection);
+	Renderer::Terrain::initialize(view, projection);
 
 	initializeTextRenderer();
 
