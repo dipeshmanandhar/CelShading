@@ -37,7 +37,7 @@ namespace Renderer
 		Bone();
 
 		/*  Functions  */
-		glm::mat4 updateBone(const glm::mat4& parentsTransform);
+		glm::mat4 updateBone(const glm::mat4& modelToParent);
 
 		void setUp();
 
@@ -45,12 +45,12 @@ namespace Renderer
 		/*  Data  */
 
 		//string name;
-		glm::mat4 modelToBoneStatic;	// converts model space to this bone space in static pose (i.e., no animation)
-		//const glm::mat4 boneToModelStatic;	// converts this bone space to model space in static pose (i.e., no animation)
+		//glm::mat4 modelToBoneStatic;	// converts model space to this bone space in static pose (i.e., no animation)
+		glm::mat4 boneToModelStatic;	// converts this bone space to model space in static pose (i.e., no animation)
 		//glm::vec4 offsetFromParent;			// translation of this bone space from parent bone space
 		//Quaternion rotationFromParent;	// rotation of this bone space from parent bone space
-		glm::mat4 boneToParentStatic;		// transformation matrix converting this bone space to parent bone space
-		//glm::mat4 parentToBoneStatic;		// transformation matrix converting parent bone space to this bone space
+		//glm::mat4 boneToParentStatic;		// transformation matrix converting this bone space to parent bone space
+		glm::mat4 parentToBoneStatic;		// transformation matrix converting parent bone space to this bone space
 
 		glm::mat4 finalTransform;
 

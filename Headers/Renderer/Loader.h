@@ -64,7 +64,7 @@ namespace Renderer
 
 		static void discoverBoneNodes(aiNode* node, const aiScene* scene, unordered_set<string>& necessaryNodes);
 
-		static int processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes);
+		static int processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes, const glm::mat4& parentToModelStatic = glm::mat4(1.0f));
 
 		static void processNodeMeshes(Model& model, aiNode* node, const aiScene* scene, const glm::mat4& modelToParentSpace = glm::mat4(1.0f));
 
@@ -74,7 +74,9 @@ namespace Renderer
 
 		static glm::mat4 assimpToGLM(const aiMatrix4x4& matrix);
 
-		static aiNode* findNode(aiNode* node, const string& name);
+		//static aiNode* findNode(aiNode* node, const string& name);
+
+		static void printMatrix(const glm::mat4& matrix);
 	};
 
 	//vector<Model> Loader::models = vector<Model>(NUM_MODELS);

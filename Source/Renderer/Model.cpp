@@ -77,5 +77,5 @@ void Renderer::Model::setUp()
 {
 	for (Bone bone : bones)
 		bone.setUp();
-	cout << "Number of bones: " << bones.size() << endl;
+	//cout << "Number of bones: " << bones.size() << endl;
 }

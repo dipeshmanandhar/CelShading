@@ -177,6 +177,9 @@ void Renderer::Loader::loadModel(Model& model, const string& path)
 
 	Bone::globalInverseTransform = glm::inverse(assimpToGLM(scene->mRootNode->mTransformation));
 
+	//printMatrix(assimpToGLM(scene->mRootNode->mTransformation));
+	//printMatrix(Bone::globalInverseTransform);
+
 	discoverBoneNodes(scene->mRootNode, scene, necessaryNodes);
 
 	processNodeBones(model, scene->mRootNode, necessaryNodes);
@@ -196,12 +199,12 @@ void Renderer::Loader::discoverBoneNodes(aiNode* node, const aiScene* scene, uno
 		for (unsigned int j = 0; j < mesh->mNumBones; j++)
 		{
 			aiBone* bone = bones[j];
-			string name = bone->mName.C_Str();
+			const char* name = bone->mName.C_Str();
 
 			//necessaryNodes.emplace(name);
 			
 			// also add all parents to set (go up tree until find root node or find another node already found as necessary)
-			aiNode* discoveredNode = findNode(scene->mRootNode, name);
+			aiNode* discoveredNode = scene->mRootNode->FindNode(name);
 			while (discoveredNode != NULL && necessaryNodes.count(discoveredNode->mName.C_Str()) == 0)
 			{
 				necessaryNodes.emplace(discoveredNode->mName.C_Str());
@@ -216,24 +219,27 @@ void Renderer::Loader::discoverBoneNodes(aiNode* node, const aiScene* scene, uno
 	}
 }
 
-int Renderer::Loader::processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes)
+int Renderer::Loader::processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes, const glm::mat4& parentToModelStatic)
 {
 	string name = node->mName.C_Str();
 	
 	if (necessaryNodes.count(name) != 0)
 	{
 		// process the node's bone
-		glm::mat4 nodeTransform = assimpToGLM(node->mTransformation);
-
 		Bone bone;
-		bone.boneToParentStatic = assimpToGLM(node->mTransformation);
+		glm::mat4 boneToParentStatic = assimpToGLM(node->mTransformation);
+
+		bone.parentToBoneStatic = glm::inverse(boneToParentStatic);
+
+		bone.boneToModelStatic = parentToModelStatic * boneToParentStatic;
+
 		unsigned int boneID = model.bones.size();
 		model.addBone(bone, name);
 
 		//process children nodes
 		for (unsigned int i = 0; i < node->mNumChildren; i++)
 		{
-			int childID = processNodeBones(model, node->mChildren[i], necessaryNodes);
+			int childID = processNodeBones(model, node->mChildren[i], necessaryNodes, bone.boneToModelStatic);
 			if (childID >= 0)
 				model.bones[boneID].children.push_back((unsigned int)childID);
 		}
@@ -257,7 +263,14 @@ void Renderer::Loader::processNodeMeshes(Model& model, aiNode* node, const aiSce
 			string name = bone->mName.C_Str();
 			unsigned int boneId = model.nameToBoneID[name];
 
-			model.bones[boneId].modelToBoneStatic = assimpToGLM(bone->mOffsetMatrix) * modelToNodeSpace;
+			//model.bones[boneId].modelToBoneStatic = assimpToGLM(bone->mOffsetMatrix) * modelToNodeSpace;
+
+			//if (assimpToGLM(bone->mOffsetMatrix) != glm::mat4(1.0f))
+			//	printMatrix(assimpToGLM(bone->mOffsetMatrix));
+			//cout << endl;
+
+			//printMatrix(model.bones[boneId].modelToBoneStatic);
+			//cout << endl;
 
 			for (unsigned int k = 0; k < bone->mNumWeights; k++)
 			{
@@ -386,6 +399,7 @@ glm::mat4 Renderer::Loader::assimpToGLM(const aiMatrix4x4& matrix)
 	return toRet;
 }
 
+/*
 aiNode* Renderer::Loader::findNode(aiNode* node, const string& name)
 {
 	if (node->mName.C_Str() == name)
@@ -397,4 +411,15 @@ aiNode* Renderer::Loader::findNode(aiNode* node, const string& name)
 			return childSearchResult;
 	}
 	return NULL;
+}
+*/
+
+void Renderer::Loader::printMatrix(const glm::mat4& matrix)
+{
+	for (unsigned int r = 0; r < 4; r++)
+	{
+		for (unsigned int c = 0; c < 4; c++)
+			cout << matrix[c][r] << " ";
+		cout << endl;
+	}
 }

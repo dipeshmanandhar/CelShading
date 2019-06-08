@@ -8,6 +8,7 @@
 //C++ Libraries
 #include <vector>
 //#include <string>
+#include <iostream>
 
 //Created H Files
 #include "../../Headers/Renderer/Bone.h"
@@ -22,15 +23,17 @@ glm::mat4 Renderer::Bone::globalInverseTransform;
 
 Renderer::Bone::Bone()
 {
-	modelToBoneStatic = boneToParentStatic = glm::mat4(1.0f);
+	boneToModelStatic = parentToBoneStatic = glm::mat4(1.0f);
 }
 
-glm::mat4 Renderer::Bone::updateBone(const glm::mat4& parentsTransform)
+glm::mat4 Renderer::Bone::updateBone(const glm::mat4& modelToParent)
 {
-	glm::mat4 boneToModel = parentsTransform * boneToParentStatic;
-	//finalTransform = globalInverseTransform * boneToModel * modelToBoneStatic;
-	finalTransform = boneToModel * modelToBoneStatic;
-	return boneToModel;
+	glm::mat4 modelToBone = parentToBoneStatic * modelToParent;
+
+	finalTransform = globalInverseTransform * boneToModelStatic * modelToBone;
+	//finalTransform = boneToModel * modelToBoneStatic;
+	//finalTransform = glm::mat4(1.0f);
+	return modelToBone;
 }
 
 void Renderer::Bone::setUp()
