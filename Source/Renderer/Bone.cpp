@@ -23,22 +23,33 @@ glm::mat4 Renderer::Bone::globalInverseTransform;
 
 Renderer::Bone::Bone()
 {
-	boneToModelStatic = parentToBoneStatic = glm::mat4(1.0f);
+	modelToBoneStatic = boneToParentStatic = glm::mat4(1.0f);
 }
 
-glm::mat4 Renderer::Bone::updateBone(const glm::mat4& modelToParent)
+glm::mat4 Renderer::Bone::updateBone(const glm::mat4& parentToModel)
 {
-	glm::mat4 modelToBone = parentToBoneStatic * modelToParent;
-
+	/*
+	//glm::mat4 modelToBone = glm::inverse(interpolatedBoneTransform) * parentToBoneStatic * modelToParent;
+	glm::mat4 modelToBone = glm::inverse(interpolatedBoneTransform) * modelToParent;
+	
 	finalTransform = globalInverseTransform * boneToModelStatic * modelToBone;
-	//finalTransform = boneToModel * modelToBoneStatic;
-	//finalTransform = glm::mat4(1.0f);
+	
 	return modelToBone;
+	*/
+	
+	glm::mat4 boneToModel = parentToModel * ((interpolatedBoneTransform == glm::mat4(0.0f)) ? boneToParentStatic : interpolatedBoneTransform);
+	//glm::mat4 boneToModel = parentToModel * interpolatedBoneTransform;
+	//glm::mat4 boneToModel = parentToModel * boneToParentStatic;
+
+	finalTransform = globalInverseTransform * boneToModel * modelToBoneStatic;
+
+	return boneToModel;
 }
 
-void Renderer::Bone::setUp()
+void Renderer::Bone::setUp(const glm::mat4& modelToParentStatic)
 {
 	//parentToBoneStatic = glm::inverse(boneToParentStatic);
+	boneToParentStatic = modelToParentStatic * glm::inverse(modelToBoneStatic);
 }
 
 /*  Functions  */

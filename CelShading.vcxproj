@@ -129,7 +129,9 @@
   <ItemGroup>
     <ClInclude Include="Headers\Entity.h" />
     <ClInclude Include="Headers\GameLogic\GameObject.h" />
+    <ClInclude Include="Headers\Renderer\Animation.h" />
     <ClInclude Include="Headers\Renderer\Bone.h" />
+    <ClInclude Include="Headers\Renderer\BoneAnim.h" />
     <ClInclude Include="Headers\Renderer\Camera.h" />
     <ClInclude Include="Headers\Renderer\Loader.h" />
     <ClInclude Include="Headers\Renderer\Mesh.h" />
@@ -165,7 +167,9 @@
     <ClCompile Include="Source\gameLogic.cpp" />
     <ClCompile Include="Source\GameLogic\GameObject.cpp" />
     <ClCompile Include="Source\main.cpp" />
+    <ClCompile Include="Source\Renderer\Animation.cpp" />
     <ClCompile Include="Source\Renderer\Bone.cpp" />
+    <ClCompile Include="Source\Renderer\BoneAnim.cpp" />
     <ClCompile Include="Source\Renderer\Camera.cpp" />
     <ClCompile Include="Source\Renderer\Loader.cpp" />
     <ClCompile Include="Source\Renderer\Mesh.cpp" />

@@ -64,11 +64,13 @@ namespace Renderer
 
 		static void discoverBoneNodes(aiNode* node, const aiScene* scene, unordered_set<string>& necessaryNodes);
 
-		static int processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes, const glm::mat4& parentToModelStatic = glm::mat4(1.0f));
+		static int processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes, const glm::mat4& modelToParentStatic = glm::mat4(1.0f));
 
 		static void processNodeMeshes(Model& model, aiNode* node, const aiScene* scene, const glm::mat4& modelToParentSpace = glm::mat4(1.0f));
 
 		static Mesh processMesh(Model& model, aiMesh* mesh, const aiScene* scene);
+
+		static void processAnimations(Model& model, const aiScene* scene);
 
 		static vector<Texture> loadMaterialTextures(Model& model, aiMaterial* mat, aiTextureType type, const string& typeName);
 

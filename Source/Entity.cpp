@@ -37,6 +37,11 @@ void Entity::initialize(Renderer::Shader& s, glm::mat4& v, glm::mat4& p)
 	projection() = &p;
 }
 
+void Entity::update(float deltaTime)
+{
+	model->update(deltaTime);
+}
+
 void Entity::Draw() const
 {
 	glm::mat4 modelMatrix(1.0f);

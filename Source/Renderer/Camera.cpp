@@ -78,12 +78,15 @@ void Renderer::Camera::processMouseMovement(float xoffset, float yoffset, GLbool
 // Processes input received from a mouse scroll-wheel event. Only requires input on the vertical wheel-axis
 void Renderer::Camera::processMouseScroll(float yoffset)
 {
+	/*
 	if (Zoom >= MIN_ZOOM && Zoom <= MAX_ZOOM)
 		Zoom -= yoffset;
 	if (Zoom <= MIN_ZOOM)
 		Zoom = MIN_ZOOM;
 	if (Zoom >= MAX_ZOOM)
 		Zoom = MAX_ZOOM;
+	*/
+	followRadius -= yoffset;
 }
 
 void Renderer::Camera::follow(const glm::vec3& point)

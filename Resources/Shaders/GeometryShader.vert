@@ -24,13 +24,23 @@ const float gradient = 10.0f;
 void main()
 {
 	mat4 boneTransform = mat4(0.0f);
-	float sum = 0.0f;
+	//float sum = 0.0f;
+	vec3 color = vec3(0.0f);
 	for(uint i = 0u; i < MAX_WEIGHTS; i++)
 	{
-		sum += aBoneWeights[i];
+		//sum += aBoneWeights[i];
+		uint temp = aBoneIDs[i] % 3u;
+		if(temp == 0u)
+			color += aBoneWeights[i] * vec3(aBoneIDs[i] / 100.0f, 0.0f, 0.0f);
+		else if(temp == 1u)
+			color += aBoneWeights[i] * vec3(0.0f, aBoneIDs[i] / 100.0f, 0.0f);
+		else// if(temp == 2u)
+			color += aBoneWeights[i] * vec3(0.0f, 0.0f, aBoneIDs[i] / 100.0f);
+
 		boneTransform += bones[aBoneIDs[i]] * aBoneWeights[i];
 	}
-	vec4 finalPos =  boneTransform * vec4(aPos, 1.0);
+	vec4 finalPos = boneTransform * vec4(aPos, 1.0);
+	//vec4 finalPos =  vec4((boneTransform * vec4(aPos, 1.0)).xyz, 1.0f);
 	//vec4 finalPos =  vec4(aPos, 1.0);
 
     // note that we read the multiplication from right to left
@@ -38,6 +48,7 @@ void main()
 	FragPos = vec3(mv * finalPos);
 	Normal = mvNormal * mat3(boneTransform) * aNormal;
 	//Normal = vec3(sum);
+	//Normal = color;
 	TexCoord = aTexCoord;	// set TexCoord to the input texel we got from the vertex data
 	visibility = clamp(exp(-pow(gl_Position.z * density, gradient)), 0.0f, 1.0f);
 }

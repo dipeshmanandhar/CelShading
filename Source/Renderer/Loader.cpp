@@ -26,7 +26,8 @@ void Renderer::Loader::loadModels()
 {
 	//models = vector<Model>(NUM_MODELS, Model());
 	loadModel(models()[CHIYA], "Resources/Models/Chiya/Test.fbx");
-	loadModel(models()[STORM_TROOPER], "Resources/Models/dancing-stormtrooper/Test.fbx");
+
+	loadModel(models()[STORM_TROOPER], "Resources/Models/simple/simple.fbx");
 }
 
 unsigned int Renderer::Loader::TextureFromFile(char const* p, string dir)
@@ -164,7 +165,7 @@ unsigned int Renderer::Loader::loadCubemap(vector<std::string>& faces)
 void Renderer::Loader::loadModel(Model& model, const string& path)
 {
 	Assimp::Importer import;
-	const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene* scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_LimitBoneWeights);
 
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)
 	{
@@ -186,7 +187,11 @@ void Renderer::Loader::loadModel(Model& model, const string& path)
 
 	processNodeMeshes(model, scene->mRootNode, scene);
 
+	processAnimations(model, scene);
+
 	model.setUp();
+
+	import.FreeScene();
 }
 
 void Renderer::Loader::discoverBoneNodes(aiNode* node, const aiScene* scene, unordered_set<string>& necessaryNodes)
@@ -219,7 +224,7 @@ void Renderer::Loader::discoverBoneNodes(aiNode* node, const aiScene* scene, uno
 	}
 }
 
-int Renderer::Loader::processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes, const glm::mat4& parentToModelStatic)
+int Renderer::Loader::processNodeBones(Model& model, aiNode* node, const unordered_set<string>& necessaryNodes, const glm::mat4& modelToParentStatic)
 {
 	string name = node->mName.C_Str();
 	
@@ -227,11 +232,8 @@ int Renderer::Loader::processNodeBones(Model& model, aiNode* node, const unorder
 	{
 		// process the node's bone
 		Bone bone;
-		glm::mat4 boneToParentStatic = assimpToGLM(node->mTransformation);
-
-		bone.parentToBoneStatic = glm::inverse(boneToParentStatic);
-
-		bone.boneToModelStatic = parentToModelStatic * boneToParentStatic;
+		bone.boneToParentStatic = assimpToGLM(node->mTransformation);
+		bone.modelToBoneStatic = glm::inverse(bone.boneToParentStatic) * modelToParentStatic;
 
 		unsigned int boneID = model.bones.size();
 		model.addBone(bone, name);
@@ -239,7 +241,7 @@ int Renderer::Loader::processNodeBones(Model& model, aiNode* node, const unorder
 		//process children nodes
 		for (unsigned int i = 0; i < node->mNumChildren; i++)
 		{
-			int childID = processNodeBones(model, node->mChildren[i], necessaryNodes, bone.boneToModelStatic);
+			int childID = processNodeBones(model, node->mChildren[i], necessaryNodes, bone.modelToBoneStatic);
 			if (childID >= 0)
 				model.bones[boneID].children.push_back((unsigned int)childID);
 		}
@@ -255,41 +257,7 @@ void Renderer::Loader::processNodeMeshes(Model& model, aiNode* node, const aiSce
 	for (unsigned int i = 0; i < node->mNumMeshes; i++)
 	{
 		aiMesh* mesh = scene->mMeshes[node->mMeshes[i]];
-		Mesh myMesh = processMesh(model, mesh, scene);
-		aiBone** bones = mesh->mBones;
-		for (unsigned int j = 0; j < mesh->mNumBones; j++)
-		{
-			aiBone* bone = bones[j];
-			string name = bone->mName.C_Str();
-			unsigned int boneId = model.nameToBoneID[name];
-
-			//model.bones[boneId].modelToBoneStatic = assimpToGLM(bone->mOffsetMatrix) * modelToNodeSpace;
-
-			//if (assimpToGLM(bone->mOffsetMatrix) != glm::mat4(1.0f))
-			//	printMatrix(assimpToGLM(bone->mOffsetMatrix));
-			//cout << endl;
-
-			//printMatrix(model.bones[boneId].modelToBoneStatic);
-			//cout << endl;
-
-			for (unsigned int k = 0; k < bone->mNumWeights; k++)
-			{
-				aiVertexWeight vw = bone->mWeights[k];
-				Vertex v = myMesh.vertices[vw.mVertexId];
-				for (unsigned int l = 0; l < 4; l++)
-				{
-					if (v.BoneWeights[l] == 0.0f)
-					{
-						v.BoneWeights[l] = vw.mWeight;
-						v.BoneIDs[l] = boneId;
-						break;
-					}
-				}
-			}
-			
-			//myMesh.boneIDs.push_back(boneId);
-		}
-		model.meshes.push_back(myMesh);
+		model.meshes.push_back(processMesh(model, mesh, scene));
 	}
 	// then do the same for each of its children
 	for (unsigned int i = 0; i < node->mNumChildren; i++)
@@ -356,7 +324,102 @@ Renderer::Mesh Renderer::Loader::processMesh(Model& model, aiMesh* mesh, const a
 		textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
 	}
 
+	//process bone weights and indices
+	aiBone** bones = mesh->mBones;
+	for (unsigned int j = 0; j < mesh->mNumBones; j++)
+	{
+		aiBone* bone = bones[j];
+		string name = bone->mName.C_Str();
+		unsigned int boneId = model.nameToBoneID[name];
+
+		model.bones[boneId].modelToBoneStatic = assimpToGLM(bone->mOffsetMatrix);
+
+		//if (assimpToGLM(bone->mOffsetMatrix) != glm::mat4(1.0f))
+		//	printMatrix(assimpToGLM(bone->mOffsetMatrix));
+		//cout << endl;
+
+		//printMatrix(model.bones[boneId].modelToBoneStatic);
+		//cout << endl;
+
+		for (unsigned int k = 0; k < bone->mNumWeights; k++)
+		{
+			aiVertexWeight vw = bone->mWeights[k];
+			Vertex& v = vertices[vw.mVertexId];
+			for (unsigned int l = 0; l < 4; l++)
+			{
+				if (v.BoneWeights[l] == 0.0f)
+				{
+					v.BoneWeights[l] = vw.mWeight;
+					v.BoneIDs[l] = boneId;
+					break;
+				}
+			}
+		}
+
+		//myMesh.boneIDs.push_back(boneId);
+	}
+
 	return Mesh(vertices, indices, textures);
+}
+
+void Renderer::Loader::processAnimations(Model& model, const aiScene* scene)
+{
+	aiAnimation** animations = scene->mAnimations;
+
+	unsigned int numAnimations = scene->mNumAnimations;
+
+	for (unsigned int i = 0; i < numAnimations; i++)
+	{
+		aiAnimation* animation = animations[i];
+		
+		//string animationName = animation->mName.C_Str();
+
+		model.animations.push_back(Animation(animation->mDuration, animation->mTicksPerSecond, model.bones.size()));
+
+		Animation& myAnimation = model.animations.back();
+
+		for (unsigned int j = 0; j < animation->mNumChannels; j++)
+		{
+			aiNodeAnim* nodeAnim = animation->mChannels[j];
+
+			string boneName = nodeAnim->mNodeName.C_Str();
+
+			if (model.containsBone(boneName))
+			{
+				unsigned int boneID = model.nameToBoneID[boneName];
+				myAnimation.boneAnims[boneID].translations.resize(nodeAnim->mNumPositionKeys);
+				myAnimation.boneAnims[boneID].rotations.resize(nodeAnim->mNumRotationKeys);
+				myAnimation.boneAnims[boneID].scales.resize(nodeAnim->mNumScalingKeys);
+
+				myAnimation.boneAnims[boneID].tTimes.resize(nodeAnim->mNumPositionKeys);
+				myAnimation.boneAnims[boneID].rTimes.resize(nodeAnim->mNumRotationKeys);
+				myAnimation.boneAnims[boneID].sTimes.resize(nodeAnim->mNumScalingKeys);
+
+				float tTime0 = (float)nodeAnim->mPositionKeys[0].mTime;
+				float rTime0 = (float)nodeAnim->mRotationKeys[0].mTime;
+				float sTime0 = (float)nodeAnim->mScalingKeys[0].mTime;
+
+				for (unsigned int k = 0; k < nodeAnim->mNumPositionKeys; k++)
+				{
+					aiVectorKey vk = nodeAnim->mPositionKeys[k];
+					myAnimation.boneAnims[boneID].translations[k] = glm::vec3(vk.mValue.x, vk.mValue.y, vk.mValue.z);
+					myAnimation.boneAnims[boneID].tTimes[k] = (float)vk.mTime - tTime0;
+				}
+				for (unsigned int k = 0; k < nodeAnim->mNumRotationKeys; k++)
+				{
+					aiQuatKey qk = nodeAnim->mRotationKeys[k];
+					myAnimation.boneAnims[boneID].rotations[k] = glm::quat(qk.mValue.w, qk.mValue.x, qk.mValue.y, qk.mValue.z);
+					myAnimation.boneAnims[boneID].rTimes[k] = (float)qk.mTime - rTime0;
+				}
+				for (unsigned int k = 0; k < nodeAnim->mNumScalingKeys; k++)
+				{
+					aiVectorKey vk = nodeAnim->mScalingKeys[k];
+					myAnimation.boneAnims[boneID].scales[k] = glm::vec3(vk.mValue.x, vk.mValue.y, vk.mValue.z);
+					myAnimation.boneAnims[boneID].sTimes[k] = (float)vk.mTime - sTime0;
+				}
+			}
+		}
+	}
 }
 
 vector<Renderer::Texture> Renderer::Loader::loadMaterialTextures(Model& model, aiMaterial* mat, aiTextureType type, const string & typeName)

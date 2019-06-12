@@ -16,6 +16,7 @@
 #include "Shader.h"
 #include "Mesh.h"
 #include "Bone.h"
+#include "Animation.h"
 
 using namespace std;
 
@@ -51,7 +52,9 @@ namespace Renderer
 		}
 		*/
 
-		void Draw(const Shader& shader);
+		void update(float deltaTime);
+
+		void Draw(const Shader& shader) const;
 
 	private:
 		/*  Model Data  */
@@ -60,7 +63,10 @@ namespace Renderer
 		string directory;
 		vector<Texture> textures_loaded;
 		unordered_map<string, unsigned int> nameToBoneID;
+		vector<Animation> animations;
 		
+		float currentTime;
+
 		/*  Functions  */
 
 		void addBone(const Bone& bone, const string& name);
@@ -69,9 +75,13 @@ namespace Renderer
 
 		bool containsBone(const string& name) const;
 
-		void updateAllBones(Bone& bone, const glm::mat4& transform = glm::mat4(1.0f));
+		void updateAllBones(Bone& bone, const glm::mat4& modelToParent = glm::mat4(1.0f));
+
+		void setUpHelper(Bone& currBone, const glm::mat4& modelToParentStatic = glm::mat4(1.0f));
 
 		void setUp();
+
+		void findInterpolatedTransforms(float deltaTime);
 
 		friend class Loader;
 	};

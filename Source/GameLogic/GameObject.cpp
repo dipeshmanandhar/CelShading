@@ -48,6 +48,7 @@ GameLogic::GameObject::GameObject(Renderer::Loader::modelID id, const glm::vec3&
 
 void GameLogic::GameObject::update(float dTime)
 {
+	Entity::update(dTime);
 	velocity += acceleration * dTime * GAME_SPEED;
 	position += (velocity.x * right + velocity.y * up + velocity.z * front) * dTime * GAME_SPEED;
 }

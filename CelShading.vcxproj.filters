@@ -75,6 +75,12 @@
     <ClInclude Include="Headers\Renderer\Bone.h">
       <Filter>Header Files\Renderer</Filter>
     </ClInclude>
+    <ClInclude Include="Headers\Renderer\Animation.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
+    <ClInclude Include="Headers\Renderer\BoneAnim.h">
+      <Filter>Header Files\Renderer</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="Resources\Shaders\LampShader.frag">
@@ -161,6 +167,12 @@
       <Filter>Source Files\GameLogic</Filter>
     </ClCompile>
     <ClCompile Include="Source\Renderer\Bone.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\Animation.cpp">
+      <Filter>Source Files\Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="Source\Renderer\BoneAnim.cpp">
       <Filter>Source Files\Renderer</Filter>
     </ClCompile>
   </ItemGroup>

@@ -34,6 +34,8 @@ public:
 
 	static void initialize(Renderer::Shader& s, glm::mat4& v, glm::mat4& p);
 
+	void update(float deltaTime);
+
 	void Draw() const;
 
 	void setPosition(glm::vec3 pos);
