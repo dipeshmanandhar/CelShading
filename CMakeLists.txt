@@ -5,16 +5,18 @@ project(CelShading VERSION 0.1.0)
 # enable_testing()
 
 # library locations
+set(GLFW_INCLUDE_DIRS "C:/Users/Dipesh/OpenGL_Libs/glfw-3.3.2/include")
+
 set(GLAD_SOURCE "C:/Users/Dipesh/OpenGL_Libs/glad/src/glad.c")
 set(GLAD_INCLUDE_DIRS "C:/Users/Dipesh/OpenGL_Libs/glad/include")
 
 set(GLM_INCLUDE_DIRS "C:/Users/Dipesh/OpenGL_Libs/glm")
 
-set(ASSIMP_LIBRARY_DIRS "C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/build/code")
+# set(ASSIMP_LIBRARY_DIRS "C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/build/code")
 set(ASSIMP_INCLUDE_DIRS "C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/include" "C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/build/include")
 
-set(LIBRARIES ${ASSIMP_LIBRARY_DIRS})
-set(INCLUDES ${GLAD_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} ${ASSIMP_INCLUDE_DIRS})
+# set(LIBRARIES ${ASSIMP_LIBRARY_DIRS})
+set(INCLUDES ${GLFW_INCLUDE_DIRS} ${GLAD_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} ${ASSIMP_INCLUDE_DIRS})
 
 file(GLOB_RECURSE SOURCES "Headers/*.h" "Source/*.cpp")
 
@@ -32,8 +34,17 @@ add_subdirectory(
 
 target_link_libraries(CelShading glfw)
 
+# Assimp
+add_subdirectory(
+    C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1
+    C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/build
+    )
+
+target_link_libraries(CelShading assimp)
+
+# all include/libs
 include_directories(${INCLUDES})
-link_directories(${LIBRARIES})
+# link_directories(${LIBRARIES})
 
 # CPack
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
