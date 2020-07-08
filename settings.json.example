@@ -1,0 +1,20 @@
+// copy this file into the .vscode folder and change the CelShading Options as needed (see README.md)
+{
+    "cmake.configureOnOpen": false,
+    "cmake.configureSettings": {
+        // CelShading Options
+        "GLFW_ROOT_DIR": "C:/Users/Dipesh/OpenGL_Libs/glfw-3.3.2",
+        "GLAD_ROOT_DIR": "C:/Users/Dipesh/OpenGL_Libs/glad",
+        "GLM_ROOT_DIR": "C:/Users/Dipesh/OpenGL_Libs/glm",
+        "ASSIMP_ROOT_DIR": "C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1",
+        // Assimp Options
+        "BUILD_SHARED_LIBS": "OFF",
+        "ASSIMP_BUILD_ASSIMP_TOOLS": "OFF",
+        "ASSIMP_HEADERCHECK": "OFF",
+        "ASSIMP_OPT_BUILD_PACKAGES": "OFF",
+        "SYSTEM_IRRXML": "OFF",
+        "ASSIMP_BUILD_SAMPLES": "OFF",
+        "BUILD_DOCS": "OFF",
+        "ASSIMP_BUILD_TESTS": "OFF"
+    }
+}

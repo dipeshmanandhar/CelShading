@@ -5,15 +5,22 @@ project(CelShading VERSION 0.1.0)
 # enable_testing()
 
 # library locations
-set(GLFW_INCLUDE_DIRS "C:/Users/Dipesh/OpenGL_Libs/glfw-3.3.2/include")
+set(GLFW_ROOT_DIR "lib/glfw-3.3.2" CACHE STRING "Path to the root directory of GLFW library.")
+set(GLAD_ROOT_DIR "lib/glad" CACHE STRING "Path to the root directory of GLAD library.")
+set(GLM_ROOT_DIR "lib/glm" CACHE STRING "Path to the root directory of GLM library.")
+set(ASSIMP_ROOT_DIR "libassimp-5.0.1" CACHE STRING "Path to the root directory of Assimp library.")
 
-set(GLAD_SOURCE "C:/Users/Dipesh/OpenGL_Libs/glad/src/glad.c")
-set(GLAD_INCLUDE_DIRS "C:/Users/Dipesh/OpenGL_Libs/glad/include")
+set(GLFW_SUB_DIRS ${GLFW_ROOT_DIR} "${GLFW_ROOT_DIR}/build")
+set(GLFW_INCLUDE_DIRS "${GLFW_ROOT_DIR}/include")
 
-set(GLM_INCLUDE_DIRS "C:/Users/Dipesh/OpenGL_Libs/glm")
+set(GLAD_SOURCE "${GLAD_ROOT_DIR}/src/glad.c")
+set(GLAD_INCLUDE_DIRS "${GLAD_ROOT_DIR}/include")
+
+set(GLM_INCLUDE_DIRS ${GLM_ROOT_DIR})
 
 # set(ASSIMP_LIBRARY_DIRS "C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/build/code")
-set(ASSIMP_INCLUDE_DIRS "C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/include" "C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/build/include")
+set(ASSIMP_SUB_DIRS ${ASSIMP_ROOT_DIR} "${ASSIMP_ROOT_DIR}/build")
+set(ASSIMP_INCLUDE_DIRS "${ASSIMP_ROOT_DIR}/include" "${ASSIMP_ROOT_DIR}/build/include")
 
 # set(LIBRARIES ${ASSIMP_LIBRARY_DIRS})
 set(INCLUDES ${GLFW_INCLUDE_DIRS} ${GLAD_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} ${ASSIMP_INCLUDE_DIRS})
@@ -27,18 +34,12 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 
-add_subdirectory(
-    C:/Users/Dipesh/OpenGL_Libs/glfw-3.3.2
-    C:/Users/Dipesh/OpenGL_Libs/glfw-3.3.2/build
-    )
+add_subdirectory(${GLFW_SUB_DIRS})
 
 target_link_libraries(CelShading glfw)
 
 # Assimp
-add_subdirectory(
-    C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1
-    C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/build
-    )
+add_subdirectory(${ASSIMP_SUB_DIRS})
 
 target_link_libraries(CelShading assimp)
 
