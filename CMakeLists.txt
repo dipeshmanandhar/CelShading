@@ -18,11 +18,15 @@ set(GLAD_INCLUDE_DIRS "${GLAD_ROOT_DIR}/include")
 
 set(GLM_INCLUDE_DIRS ${GLM_ROOT_DIR})
 
-# set(ASSIMP_LIBRARY_DIRS "C:/Users/Dipesh/OpenGL_Libs/assimp-5.0.1/build/code")
-set(ASSIMP_SUB_DIRS ${ASSIMP_ROOT_DIR} "${ASSIMP_ROOT_DIR}/build")
+set(ASSIMP_LIBRARY
+    "${ASSIMP_ROOT_DIR}/build/code/libassimp.a"
+    "${ASSIMP_ROOT_DIR}/build/code/libassimp.dll.a"
+    "${ASSIMP_ROOT_DIR}/build/contrib/zlib/libzlibstatic.a"
+    )
+# set(ASSIMP_SUB_DIRS ${ASSIMP_ROOT_DIR} "${ASSIMP_ROOT_DIR}/build")
 set(ASSIMP_INCLUDE_DIRS "${ASSIMP_ROOT_DIR}/include" "${ASSIMP_ROOT_DIR}/build/include")
 
-# set(LIBRARIES ${ASSIMP_LIBRARY_DIRS})
+set(LIBRARIES ${ASSIMP_LIBRARY})
 set(INCLUDES ${GLFW_INCLUDE_DIRS} ${GLAD_INCLUDE_DIRS} ${GLM_INCLUDE_DIRS} ${ASSIMP_INCLUDE_DIRS})
 
 file(GLOB_RECURSE SOURCES "Headers/*.h" "Source/*.cpp")
@@ -39,13 +43,13 @@ add_subdirectory(${GLFW_SUB_DIRS})
 target_link_libraries(CelShading glfw)
 
 # Assimp
-add_subdirectory(${ASSIMP_SUB_DIRS})
+# add_subdirectory(${ASSIMP_SUB_DIRS})
 
-target_link_libraries(CelShading assimp)
+# target_link_libraries(CelShading assimp)
 
 # all include/libs
 include_directories(${INCLUDES})
-# link_directories(${LIBRARIES})
+target_link_libraries(CelShading ${LIBRARIES})
 
 # CPack
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
